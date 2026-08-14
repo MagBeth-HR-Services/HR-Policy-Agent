@@ -1,0 +1,29 @@
+[
+  {
+    "ticket_id": "TKT-0001",
+    "employee_id": "E1003",
+    "category": "benefits",
+    "summary": "Mock request for clarification of part-time benefits eligibility.",
+    "status": "closed",
+    "created_at": "2026-07-08T15:30:00Z",
+    "confirmed_by_user": true
+  },
+  {
+    "ticket_id": "TKT-0002",
+    "employee_id": "E1002",
+    "category": "remote_work",
+    "summary": "Mock preliminary inquiry about temporary work from an international location.",
+    "status": "draft",
+    "created_at": "2026-08-01T18:10:00Z",
+    "confirmed_by_user": false
+  },
+  {
+    "ticket_id": "TKT-0003",
+    "employee_id": "E1001",
+    "category": "PTO",
+    "summary": "Mock request asking how to submit a three-day PTO request.",
+    "status": "open",
+    "created_at": "2026-08-03T16:45:00Z",
+    "confirmed_by_user": true
+  }
+]

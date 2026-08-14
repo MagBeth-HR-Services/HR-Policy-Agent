@@ -1,0 +1,14 @@
+[
+  {"employee_id": "E1001", "available_hours": 56.0, "approved_future_hours": 8.0, "annual_accrual_hours": 160.0, "carryover_hours": 16.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1002", "available_hours": 120.0, "approved_future_hours": 0.0, "annual_accrual_hours": 160.0, "carryover_hours": 24.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1003", "available_hours": 34.0, "approved_future_hours": 4.0, "annual_accrual_hours": 80.0, "carryover_hours": 8.0, "last_updated": "2026-08-01", "notes": "Part-time accrual is prorated."},
+  {"employee_id": "E1004", "available_hours": 0.0, "approved_future_hours": 0.0, "annual_accrual_hours": 0.0, "carryover_hours": 0.0, "last_updated": "2026-08-01", "notes": "Intern is not eligible for PTO under POL-001."},
+  {"employee_id": "E1005", "available_hours": 88.0, "approved_future_hours": 16.0, "annual_accrual_hours": 160.0, "carryover_hours": 32.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1006", "available_hours": 144.0, "approved_future_hours": 24.0, "annual_accrual_hours": 160.0, "carryover_hours": 40.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1007", "available_hours": 96.0, "approved_future_hours": 0.0, "annual_accrual_hours": 160.0, "carryover_hours": 24.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1008", "available_hours": 176.0, "approved_future_hours": 40.0, "annual_accrual_hours": 160.0, "carryover_hours": 40.0, "last_updated": "2026-08-01", "notes": "Balance is below the 200-hour policy maximum."},
+  {"employee_id": "E1009", "available_hours": 104.0, "approved_future_hours": 0.0, "annual_accrual_hours": 160.0, "carryover_hours": 40.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1010", "available_hours": 72.0, "approved_future_hours": 8.0, "annual_accrual_hours": 160.0, "carryover_hours": 8.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1011", "available_hours": 48.0, "approved_future_hours": 0.0, "annual_accrual_hours": 160.0, "carryover_hours": 0.0, "last_updated": "2026-08-01", "notes": "Eligible full-time employee."},
+  {"employee_id": "E1012", "available_hours": 0.0, "approved_future_hours": 0.0, "annual_accrual_hours": 0.0, "carryover_hours": 0.0, "last_updated": "2026-08-01", "notes": "Contractor is not eligible for PTO under POL-001."}
+]

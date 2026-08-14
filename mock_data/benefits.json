@@ -1,0 +1,14 @@
+[
+  {"employee_id": "E1001", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "enrolled", "vision_status": "waived", "enrollment_effective_date": "2023-06-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1002", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "enrolled", "vision_status": "enrolled", "enrollment_effective_date": "2022-11-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1003", "benefits_eligible": false, "medical_status": "ineligible", "dental_status": "ineligible", "vision_status": "ineligible", "enrollment_effective_date": null, "last_updated": "2026-08-01"},
+  {"employee_id": "E1004", "benefits_eligible": false, "medical_status": "ineligible", "dental_status": "ineligible", "vision_status": "ineligible", "enrollment_effective_date": null, "last_updated": "2026-08-01"},
+  {"employee_id": "E1005", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "waived", "vision_status": "enrolled", "enrollment_effective_date": "2021-01-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1006", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "enrolled", "vision_status": "enrolled", "enrollment_effective_date": "2019-09-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1007", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "enrolled", "vision_status": "enrolled", "enrollment_effective_date": "2021-03-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1008", "benefits_eligible": true, "medical_status": "waived", "dental_status": "enrolled", "vision_status": "enrolled", "enrollment_effective_date": "2018-07-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1009", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "enrolled", "vision_status": "enrolled", "enrollment_effective_date": "2017-05-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1010", "benefits_eligible": true, "medical_status": "enrolled", "dental_status": "waived", "vision_status": "waived", "enrollment_effective_date": "2021-10-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1011", "benefits_eligible": true, "medical_status": "pending", "dental_status": "pending", "vision_status": "pending", "enrollment_effective_date": "2026-09-01", "last_updated": "2026-08-01"},
+  {"employee_id": "E1012", "benefits_eligible": false, "medical_status": "ineligible", "dental_status": "ineligible", "vision_status": "ineligible", "enrollment_effective_date": null, "last_updated": "2026-08-01"}
+]
