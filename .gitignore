@@ -30,3 +30,7 @@ Thumbs.db
 
 # Runtime files
 *.log
+
+# Generated runtime data
+data/chroma/
+data/*.db
