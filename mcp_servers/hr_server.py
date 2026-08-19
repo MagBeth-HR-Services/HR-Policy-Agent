@@ -1,5 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
+from agent.safety import validate_employee_id
 from database.hr_service import (
     create_hr_ticket as create_ticket_record,
     get_benefits_status as retrieve_benefits_status,
@@ -20,19 +21,25 @@ def health_check() -> str:
 @mcp.tool()
 def get_employee_summary(employee_id: str) -> dict:
     """Retrieve a limited employee profile using an employee ID."""
-    return retrieve_employee_summary(employee_id)
+    validated_id = validate_employee_id(employee_id)
+
+    return retrieve_employee_summary(validated_id)
 
 
 @mcp.tool()
 def get_pto_balance(employee_id: str) -> dict:
     """Retrieve an employee's current PTO balance."""
-    return retrieve_pto_balance(employee_id)
+    validated_id = validate_employee_id(employee_id)
+
+    return retrieve_pto_balance(validated_id)
 
 
 @mcp.tool()
 def get_benefits_status(employee_id: str) -> dict:
     """Retrieve an employee's current benefits status."""
-    return retrieve_benefits_status(employee_id)
+    validated_id = validate_employee_id(employee_id)
+
+    return retrieve_benefits_status(validated_id)
 
 
 @mcp.tool()
@@ -48,8 +55,10 @@ def create_hr_ticket(
     confirmed_by_user must be true only when the user has explicitly
     approved creating the ticket.
     """
+    validated_id = validate_employee_id(employee_id)
+
     return create_ticket_record(
-        employee_id=employee_id,
+        employee_id=validated_id,
         category=category,
         summary=summary,
         confirmed_by_user=confirmed_by_user,
