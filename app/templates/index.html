@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Horizon HR Policy Agent</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f3f6fa;
+            color: #1f2937;
+        }
+
+        .page {
+            width: min(900px, 94%);
+            margin: 0 auto;
+            padding: 32px 0;
+        }
+
+        header {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            color: #173b67;
+        }
+
+        header p {
+            margin: 0;
+            color: #5f6b7a;
+        }
+
+        .chat-panel {
+            background: white;
+            border: 1px solid #dce3eb;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+            overflow: hidden;
+        }
+
+        #messages {
+            height: 520px;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .assistant {
+            background: #edf3fa;
+            border-bottom-left-radius: 4px;
+        }
+
+        .user {
+            margin-left: auto;
+            background: #1d5c96;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .status {
+            min-height: 24px;
+            padding: 0 20px;
+            color: #5f6b7a;
+            font-size: 14px;
+        }
+
+        form {
+            display: flex;
+            gap: 12px;
+            padding: 18px;
+            border-top: 1px solid #dce3eb;
+            background: #fafbfd;
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 48px;
+            max-height: 140px;
+            resize: vertical;
+            padding: 12px;
+            border: 1px solid #b9c4d0;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        button {
+            padding: 0 24px;
+            border: 0;
+            border-radius: 8px;
+            background: #1d5c96;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #94a3b8;
+            cursor: wait;
+        }
+
+        .notice {
+            margin-top: 14px;
+            font-size: 13px;
+            color: #687586;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <header>
+            <h1>Horizon HR Policy Agent</h1>
+            <p>
+                Ask about company policies, PTO, benefits,
+                remote work, or HR support.
+            </p>
+        </header>
+
+        <section class="chat-panel">
+            <div id="messages">
+                <div class="message assistant">
+                    Hello. How can I help with your HR policy question?
+                </div>
+            </div>
+
+            <div id="status" class="status"></div>
+
+            <form id="chat-form">
+                <textarea
+                    id="message-input"
+                    aria-label="Message"
+                    placeholder="Enter your question..."
+                    required
+                ></textarea>
+
+                <button id="send-button" type="submit">
+                    Send
+                </button>
+            </form>
+        </section>
+
+        <p class="notice">
+            This training application uses fictional company and
+            employee data. It does not provide final HR approval.
+        </p>
+    </main>
+
+    <script>
+        const form = document.getElementById("chat-form");
+        const input = document.getElementById("message-input");
+        const messages = document.getElementById("messages");
+        const status = document.getElementById("status");
+        const sendButton = document.getElementById("send-button");
+
+        let sessionId = null;
+
+        function addMessage(text, role) {
+            const message = document.createElement("div");
+            message.className = `message ${role}`;
+            message.textContent = text;
+
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const userMessage = input.value.trim();
+
+            if (!userMessage) {
+                return;
+            }
+
+            addMessage(userMessage, "user");
+            input.value = "";
+            sendButton.disabled = true;
+            status.textContent = "Agent is working...";
+
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "The request failed."
+                    );
+                }
+
+                sessionId = data.session_id;
+                addMessage(data.answer, "assistant");
+                status.textContent = "";
+            } catch (error) {
+                addMessage(
+                    `Error: ${error.message}`,
+                    "assistant"
+                );
+                status.textContent = "";
+            } finally {
+                sendButton.disabled = false;
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>
