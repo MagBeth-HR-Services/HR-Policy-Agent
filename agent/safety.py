@@ -3,6 +3,11 @@ import re
 
 EMPLOYEE_ID_PATTERN = re.compile(r"^E\d{4}$")
 
+INVALID_EMPLOYEE_REFERENCE_PATTERN = re.compile(
+    r"\bemployee(?:\s+id)?\s*[:#-]?\s*\d{4}\b",
+    re.IGNORECASE,
+)
+
 EXPLICIT_CONFIRMATIONS = {
     "yes",
     "yes, create it",
@@ -25,6 +30,11 @@ def validate_employee_id(employee_id: str) -> str:
         )
 
     return normalized_id
+
+
+def contains_invalid_employee_reference(message: str) -> bool:
+    """Detect an employee reference that omits the required E prefix."""
+    return bool(INVALID_EMPLOYEE_REFERENCE_PATTERN.search(message))
 
 
 def is_explicit_confirmation(message: str) -> bool:

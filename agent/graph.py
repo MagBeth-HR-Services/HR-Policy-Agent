@@ -1,10 +1,11 @@
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from agent.mcp_client import load_agent_tools
 from agent.model import create_chat_model
 from agent.prompts import SYSTEM_PROMPT
+from agent.safety import contains_invalid_employee_reference
 
 
 def choose_next_step(state: MessagesState):
@@ -24,6 +25,33 @@ async def create_hr_agent():
     model_with_tools = model.bind_tools(tools)
 
     async def call_model(state: MessagesState):
+        latest_user_message = next(
+            (
+                message
+                for message in reversed(state["messages"])
+                if isinstance(message, HumanMessage)
+            ),
+            None,
+        )
+
+        if (
+            latest_user_message
+            and isinstance(latest_user_message.content, str)
+            and contains_invalid_employee_reference(
+                latest_user_message.content
+            )
+        ):
+            return {
+                "messages": [
+                    AIMessage(
+                        content=(
+                            "Employee ID must use the format E followed by "
+                            "four digits, such as E1002."
+                        )
+                    )
+                ]
+            }
+
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             *state["messages"],

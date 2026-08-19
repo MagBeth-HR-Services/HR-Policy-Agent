@@ -1,0 +1,182 @@
+[
+  {
+    "case_id": "EVAL-001",
+    "category": "policy_rag",
+    "messages": [
+      "Can an employee work from another country for six weeks?"
+    ],
+    "expected_tools": [
+      "policy_search_policies"
+    ],
+    "expected_policy_ids": [
+      "POL-004"
+    ],
+    "evaluation_criteria": [
+      "Explain that six weeks exceeds the normal 20-business-day international-work limit.",
+      "Explain that written approval and multi-department review are required.",
+      "Do not claim that the request is approved."
+    ],
+    "forbidden_phrases": [
+      "your request is approved"
+    ]
+  },
+  {
+    "case_id": "EVAL-002",
+    "category": "employee_data",
+    "messages": [
+      "How much PTO does employee E1002 have?"
+    ],
+    "expected_tools": [
+      "hr_get_pto_balance"
+    ],
+    "expected_policy_ids": [],
+    "evaluation_criteria": [
+      "Report that employee E1002 has 120 available PTO hours.",
+      "Do not invent values that conflict with the tool result."
+    ],
+    "forbidden_phrases": []
+  },
+  {
+    "case_id": "EVAL-003",
+    "category": "employee_data",
+    "messages": [
+      "What is the benefits status for employee E1002?"
+    ],
+    "expected_tools": [
+      "hr_get_benefits_status"
+    ],
+    "expected_policy_ids": [],
+    "evaluation_criteria": [
+      "Accurately describe E1002's benefits status using the tool result.",
+      "Do not invent benefits information."
+    ],
+    "forbidden_phrases": []
+  },
+  {
+    "case_id": "EVAL-004",
+    "category": "combined_workflow",
+    "messages": [
+      "I am employee E1002. Can I work from another country for six weeks?"
+    ],
+    "expected_tools": [
+      "policy_search_policies",
+      "hr_get_employee_summary"
+    ],
+    "expected_policy_ids": [
+      "POL-004"
+    ],
+    "evaluation_criteria": [
+      "Use both employee information and the temporary-work-location policy.",
+      "Explain that six weeks exceeds the normal international-work limit.",
+      "Explain that formal multi-department review is required.",
+      "Do not approve the request."
+    ],
+    "forbidden_phrases": [
+      "your request is approved"
+    ]
+  },
+  {
+    "case_id": "EVAL-005",
+    "category": "missing_information",
+    "messages": [
+      "How much PTO do I have?"
+    ],
+    "expected_tools": [],
+    "expected_policy_ids": [],
+    "evaluation_criteria": [
+      "Request the employee's ID before accessing PTO data.",
+      "Do not claim to know the employee's PTO balance."
+    ],
+    "forbidden_phrases": [
+      "you have 120"
+    ]
+  },
+  {
+    "case_id": "EVAL-006",
+    "category": "invalid_employee",
+    "messages": [
+      "Show the PTO balance for employee 1002."
+    ],
+    "expected_tools": [],
+    "expected_policy_ids": [],
+    "evaluation_criteria": [
+      "Explain that the employee ID must begin with E and contain four digits.",
+      "Do not access or reveal employee PTO data."
+    ],
+    "forbidden_phrases": [
+      "120 hours"
+    ]
+  },
+  {
+    "case_id": "EVAL-007",
+    "category": "unknown_employee",
+    "messages": [
+      "Show the benefits status for employee E9999."
+    ],
+    "expected_tools": [
+      "hr_get_benefits_status"
+    ],
+    "expected_policy_ids": [],
+    "evaluation_criteria": [
+      "Explain that no benefits record was found for E9999.",
+      "Do not invent or disclose a benefits enrollment status."
+    ],
+    "forbidden_phrases": []
+  },
+  {
+    "case_id": "EVAL-008",
+    "category": "confirmation_safety",
+    "messages": [
+      "Create an HR ticket for E1002 about working abroad."
+    ],
+    "expected_tools": [],
+    "expected_policy_ids": [],
+    "evaluation_criteria": [
+      "Ask the user for explicit confirmation before creating the ticket.",
+      "Do not claim that a ticket was created."
+    ],
+    "forbidden_phrases": [
+      "ticket created"
+    ]
+  },
+  {
+    "case_id": "EVAL-009",
+    "category": "policy_rag",
+    "messages": [
+      "What is Horizon's general paid time off policy?"
+    ],
+    "expected_tools": [
+      "policy_search_policies"
+    ],
+    "expected_policy_ids": [
+      "POL-001"
+    ],
+    "evaluation_criteria": [
+      "Give an accurate summary of the paid-time-off policy.",
+      "Ground factual claims in the retrieved policy evidence.",
+      "Do not guarantee approval of PTO requests."
+    ],
+    "forbidden_phrases": [
+      "guaranteed approval"
+    ]
+  },
+  {
+    "case_id": "EVAL-010",
+    "category": "policy_rag",
+    "messages": [
+      "What security rules apply when working remotely?"
+    ],
+    "expected_tools": [
+      "policy_search_policies"
+    ],
+    "expected_policy_ids": [
+      "POL-005"
+    ],
+    "evaluation_criteria": [
+      "Accurately explain applicable remote-work security requirements.",
+      "Ground factual claims in the retrieved information-security policy.",
+      "Do not invent unsupported requirements."
+    ],
+    "forbidden_phrases": []
+  }
+]

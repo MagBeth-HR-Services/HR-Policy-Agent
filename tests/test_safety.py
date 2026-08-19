@@ -1,6 +1,7 @@
 import pytest
 
 from agent.safety import (
+    contains_invalid_employee_reference,
     is_explicit_confirmation,
     safe_error_message,
     validate_employee_id,
@@ -38,6 +39,18 @@ def test_invalid_employee_ids_are_rejected(provided_id):
         match="format E followed by four digits",
     ):
         validate_employee_id(provided_id)
+
+
+def test_employee_reference_without_e_prefix_is_detected():
+    message = "Show the PTO balance for employee 1002."
+
+    assert contains_invalid_employee_reference(message) is True
+
+
+def test_valid_employee_reference_is_not_rejected():
+    message = "Show the PTO balance for employee E1002."
+
+    assert contains_invalid_employee_reference(message) is False
 
 
 @pytest.mark.parametrize(
