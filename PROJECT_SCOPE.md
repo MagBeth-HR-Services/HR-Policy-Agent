@@ -1,40 +1,50 @@
-# HR Policy Agent - Project Scope
+# Horizon HR Policy Agent — Project Scope
 
 ## 1. Project Goal
 
-Build and deploy an agentic HR assistant for a fictional company. The assistant will answer policy questions using Retrieval-Augmented Generation (RAG), retrieve synthetic employee information through Model Context Protocol (MCP) tools, complete multi-step HR workflows, and provide grounded responses with readable citations and operational tool traces.
+Build and deploy an agentic HR assistant for the fictional company Horizon Technologies.
 
-The system will be designed for local development and modest free-tier deployment.
+The assistant combines:
 
-## 2. Fictional Company
+- Retrieval-Augmented Generation over company policies
+- Synthetic employee and HR information
+- LangGraph agent orchestration
+- Tools exposed through genuine MCP servers
+- Grounded policy answers with citations
+- Safe mock HR operations
+- A browser-based FastAPI chat interface
 
-**Company name:** Horizon Technologies
+The system currently runs locally. Deployment, expanded evaluation, visible UI tool traces, and final demonstration preparation remain pending.
 
-Horizon Technologies is a fictional, medium-sized US software company with office-based, hybrid, and remote employees. All company documents, employee records, balances, and workflow results in this project will be synthetic.
+## 2. Fictional Company and Data
 
-No real employee information or confidential company information will be used.
+Horizon Technologies is a fictional, medium-sized US software company with office-based, hybrid, and remote employees.
 
-## 3. Policy Areas
+All policies, employee records, balances, benefits information, and HR tickets in this project are synthetic. The project contains no real employee information or confidential company data.
 
-The policy corpus will cover these areas:
+The application is an educational demonstration. It does not provide real HR, legal, tax, immigration, medical, or financial advice.
 
-1. Paid time off (PTO)
+## 3. Implemented Policy Areas
+
+The policy corpus contains 11 fictional policies covering:
+
+1. Paid time off
 2. Company holidays
 3. Remote work
 4. Temporary domestic and international work locations
-5. Information and data security
-6. Business expenses and reimbursement
+5. Information security
+6. Business expenses
 7. Company equipment
 8. Employee benefits
 9. Employee leave
 10. Employee onboarding
 11. Workplace conduct
 
-These topics provide enough breadth for ordinary policy questions while supporting the two selected multi-step demonstration workflows.
+The corpus uses both Markdown and PDF source formats.
 
-## 4. Demonstration Workflow 1 - PTO Request Guidance
+## 4. Selected Demonstration Workflow 1 — PTO Guidance
 
-### Example user request
+### Example request
 
 > I am employee E1001. Can I take three PTO days next week?
 
@@ -42,40 +52,36 @@ These topics provide enough breadth for ordinary policy questions while supporti
 
 The agent should:
 
-1. Identify the employee ID supplied by the user.
-2. Retrieve the employee's synthetic profile.
-3. Retrieve the employee's synthetic PTO balance.
-4. Search for relevant PTO policy evidence.
-5. Determine whether the request appears to satisfy the available balance and policy rules.
+1. Identify and validate the employee ID.
+2. Retrieve the employee’s synthetic profile when relevant.
+3. Retrieve the employee’s synthetic PTO balance.
+4. Search for PTO policy evidence.
+5. Compare the request with the balance and policy requirements.
 6. Explain notice and manager-approval requirements with citations.
-7. Offer an appropriate mock next step, such as drafting a manager message or creating a mock HR ticket.
-8. Obtain explicit confirmation before performing the mock action.
+7. Avoid claiming that the request is approved.
+8. Offer an appropriate mock next step.
+9. Require explicit confirmation before creating a mock HR ticket.
 
-### Expected MCP tool sequence
+### Expected implemented tool sequence
 
-The exact sequence may vary when justified, but the normal sequence is:
+The exact sequence may vary depending on the request:
 
-1. `lookup_employee_profile`
-2. `check_pto_balance`
-3. `search_policy_documents`
-4. `get_policy_section`, if more precise evidence is needed
-5. `check_policy_compliance`
-6. `create_mock_hr_ticket`, only after explicit confirmation and only if requested
+1. `hr_get_employee_summary`
+2. `hr_get_pto_balance`
+3. `policy_search_policies`
+4. `hr_create_hr_ticket`, only after explicit confirmation
 
-### Requirements demonstrated
+### Current status
 
-- Structured employee-data lookup
-- Structured PTO-balance lookup
-- Policy retrieval through MCP
-- Grounded policy citations
-- Multi-tool agent behavior
-- Compliance checking
-- Confirmation before a mock action
-- Concise tool-call tracing
+The required policy-search, employee-summary, PTO-balance, and mock-ticket tools are implemented through MCP.
 
-## 5. Demonstration Workflow 2 - Temporary International Remote Work
+Employee-ID validation and explicit-confirmation safeguards are implemented and tested.
 
-### Example user request
+The final end-to-end workflow still needs to be verified in the deployed browser interface before recording the demonstration.
+
+## 5. Selected Demonstration Workflow 2 — International Temporary Work
+
+### Example request
 
 > I am employee E1002. Can I work from another country for six weeks?
 
@@ -83,103 +89,150 @@ The exact sequence may vary when justified, but the normal sequence is:
 
 The agent should:
 
-1. Identify the employee ID supplied by the user.
-2. Retrieve the employee's synthetic profile and normal work location.
-3. Search the remote-work policy.
-4. Search the temporary-location or international-work policy.
-5. Search the information-security policy.
-6. Combine evidence from multiple policy documents.
-7. Check the request against the available policy rules.
-8. Explain approval, security, location, duration, and escalation requirements with citations.
-9. Offer to create a mock HR review ticket when appropriate.
-10. Obtain explicit confirmation before creating the mock ticket.
+1. Identify and validate the employee ID.
+2. Retrieve the employee’s synthetic profile and primary work location.
+3. Search the temporary-work-location policy.
+4. Retrieve related remote-work and information-security evidence when needed.
+5. Combine employee information with policy evidence.
+6. Explain location, duration, approval, security, and escalation requirements.
+7. Cite the relevant policy IDs and sections.
+8. Avoid approving the request.
+9. Offer to create a mock HR review ticket.
+10. Require explicit confirmation before creating the ticket.
 
-### Expected MCP tool sequence
+### Expected implemented tool sequence
 
-The exact sequence may vary when justified, but the normal sequence is:
+The exact sequence may vary depending on the evidence required:
 
-1. `lookup_employee_profile`
-2. `search_policy_documents` for remote-work evidence
-3. `search_policy_documents` for international-location evidence
-4. `search_policy_documents` for security evidence
-5. `get_policy_section`, when more precise evidence is needed
-6. `check_policy_compliance`
-7. `create_mock_hr_ticket`, only after explicit confirmation and only if requested
+1. `hr_get_employee_summary`
+2. `policy_search_policies`
+3. Additional calls to `policy_search_policies` when multiple policy subjects are needed
+4. `hr_create_hr_ticket`, only after explicit confirmation
 
-### Requirements demonstrated
+### Current status
 
-- Structured employee-data lookup
-- Multi-document retrieval
-- Policy evidence from several subject areas
-- Grounded citations and snippets
-- Multi-step agent planning and tool selection
-- Escalation when automated approval is inappropriate
-- Confirmation before a mock action
-- Concise tool-call tracing
+The combined employee-profile and policy-search workflow is implemented and included in the evaluation suite.
 
-## 6. Initial MCP Tool Scope
+The agent correctly identifies the 20-business-day limit, retrieves `POL-004`, recommends multi-department review, and does not approve the request.
 
-The system will expose at least these six tools through MCP:
+The final workflow still needs to be verified in the deployed browser interface before recording the demonstration.
 
-### `search_policy_documents`
+## 6. Implemented MCP Scope
 
-Search the RAG index for policy evidence relevant to a query. Return matching content and citation metadata.
+The agent connects to two FastMCP servers using `stdio`.
 
-### `get_policy_section`
+### Policy MCP server
 
-Retrieve a specific policy section using its document and section identifiers.
+#### `policy_health_check`
 
-### `lookup_employee_profile`
+Confirms that the policy MCP server can start and respond.
 
-Retrieve a synthetic employee profile by employee ID.
+#### `policy_search_policies`
 
-### `check_pto_balance`
+Searches the Chroma policy index and returns ranked policy evidence with:
 
-Retrieve the synthetic PTO balance for an employee.
+- Policy ID
+- Title
+- Section
+- Page number when applicable
+- Chunk ID
+- Source filename
+- Snippet
+- Full chunk content
+- Relevance score
 
-### `check_policy_compliance`
+### HR MCP server
 
-Compare a structured request with relevant policy rules and return an explainable preliminary result. This tool will not make legally binding or irreversible decisions.
+#### `hr_health_check`
 
-### `create_mock_hr_ticket`
+Confirms that the HR MCP server can start and respond.
 
-Create a clearly labeled mock HR ticket after explicit user confirmation. It will not contact a real HR system or person.
+#### `hr_get_employee_summary`
 
-An additional `draft_hr_email` tool may be considered later if it adds useful functionality without unnecessarily increasing scope.
+Retrieves a synthetic employee profile by employee ID.
 
-## 7. Safety Boundaries
+#### `hr_get_pto_balance`
 
-- The assistant will use only fictional company policies and synthetic employee data.
-- The assistant will not make real employment, legal, tax, benefits, or disciplinary decisions.
-- The assistant will distinguish policy evidence from general recommendations.
-- The assistant will state when the policy corpus does not contain enough evidence.
-- The assistant will request missing employee IDs or other essential information.
-- The assistant will request clarification when a materially ambiguous request cannot be handled safely.
-- The assistant will escalate sensitive, unsupported, or exception-based cases to a fictional HR reviewer.
-- Ticket creation, email drafting, and record changes will be mock operations.
-- The assistant will obtain explicit user confirmation before performing a mock action that appears consequential.
-- Operational traces will show tool names, arguments, results, citations, and decisions without exposing hidden chain-of-thought.
+Retrieves the synthetic PTO balance for an employee.
 
-## 8. Features Outside the Initial Scope
+#### `hr_get_benefits_status`
 
-The initial project will not include:
+Retrieves synthetic benefits eligibility and enrollment information.
 
-- Real employee or company data
-- Integration with a real HR information system
+#### `hr_create_hr_ticket`
+
+Creates a clearly labeled mock HR ticket after explicit confirmation.
+
+### Tool-count status
+
+Seven MCP tools are discoverable by the agent. Five perform policy or HR operations, and two provide server health checks.
+
+## 7. Implemented Safety Boundaries
+
+The current implementation includes these boundaries:
+
+- Only fictional policies and synthetic employee data are used.
+- Employee IDs must follow the `E####` format.
+- Invalid employee references are rejected before the LLM can reinterpret them.
+- Employee tools return only the information required for the request.
+- Missing records are reported without unsupported speculation.
+- Policy answers must use retrieved company evidence.
+- The agent does not approve HR requests.
+- Sensitive or unsupported cases are escalated to HR review.
+- Ticket creation is a mock operation.
+- Explicit user confirmation is required before ticket creation.
+- Unexpected internal errors are converted into safe user messages.
+- Hidden chain-of-thought is not displayed.
+
+## 8. Features Outside Scope
+
+The project will not include:
+
+- Real employee or company information
+- Integration with a production HR information system
 - Real email or messaging delivery
-- Real ticket creation
+- Real HR ticket creation
 - Payroll processing
-- Automated approval or denial of leave
+- Automated approval or denial of employee requests
 - Automated employment or disciplinary decisions
-- Legal, immigration, or tax advice
+- Legal, tax, immigration, medical, or financial advice
 - Voice interaction
 - A mobile application
 - Multiple organizations or tenants
-- Paid database infrastructure
-- A large production-scale policy corpus
+- A paid production database
+- A production-scale policy corpus
 
-These exclusions keep the project focused, safe, explainable, and achievable while meeting the assignment requirements.
+These exclusions keep the project safe, explainable, and compatible with modest hosting resources.
 
-## 9. Definition of Scope Completion
+## 9. Remaining Work Before Submission
 
-This scope is complete when the deployed application can reliably demonstrate both selected workflows end-to-end, including genuine MCP tool calls, structured mock-data lookup, policy retrieval, readable citations, operational traces, graceful failure handling, and confirmation before mock actions.
+The following items remain within the project scope but are not yet complete:
+
+- Expand the evaluation dataset from 10 to 20–30 cases
+- Add required evaluation metrics
+- Measure warm latency p50 and p95
+- Measure deployed cold-start behavior
+- Run and report an ablation or comparison
+- Return or display concise operational tool traces in the web interface
+- Finish `design-and-evaluation.md`
+- Finish `ai-tooling.md`
+- Create `deployed.md`
+- Configure and verify Render deployment
+- Test both demonstration workflows after deployment
+- Complete the final security and repository audit
+- Record the required demonstration video
+
+## 10. Definition of Scope Completion
+
+The project scope will be complete when:
+
+1. The application is accessible through a shareable deployed URL.
+2. Both selected workflows run end-to-end through the deployed interface.
+3. The workflows use genuine MCP tool calls.
+4. Policy responses include grounded citations.
+5. The interface provides a concise operational tool trace without exposing hidden reasoning.
+6. Safety, error handling, and confirmation behavior work as intended.
+7. The assignment-required evaluation and metrics are complete.
+8. All required documentation is present.
+9. CI passes for the final repository state.
+10. The demonstration and submission requirements are satisfied.

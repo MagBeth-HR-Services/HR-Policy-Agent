@@ -1,260 +1,555 @@
-# HR Policy Agent - Architecture
+# Horizon HR Policy Agent — Architecture
 
-## 1. Architecture Goal
+## 1. Architecture Purpose
 
-The application will use a simple, modular architecture that can run locally and as one modest free-tier web service. It will combine a browser chat interface, an API, a LangGraph agent, genuine MCP tool calls, policy retrieval through Chroma, synthetic HR data in SQLite, and an OpenRouter-hosted language model.
+The Horizon HR Policy Agent combines:
 
-The design intentionally reuses technologies practiced in the course while meeting the project's API, MCP, RAG, safety, traceability, testing, and deployment requirements.
+- A browser chat interface
+- A FastAPI web application
+- A LangGraph agent
+- An OpenRouter-hosted language model
+- A multi-server MCP client
+- Two FastMCP servers
+- Policy retrieval through Chroma
+- Synthetic HR data stored in SQLite
 
-## 2. Technology Stack
+The architecture currently runs locally and through GitHub Actions. Single-service deployment to Render remains planned.
 
-| Component | Selected technology | Reason |
+## 2. Current Technology Stack
+
+| Component | Technology | Current status |
 | --- | --- | --- |
-| Programming language | Python | Used throughout the course examples and supported by all selected libraries |
-| Web application and API | FastAPI | Provides the browser UI, `/chat`, and `/health` from one web process |
-| Browser interface | Small HTML, CSS, and JavaScript chat page | Keeps the UI lightweight while consuming the structured FastAPI response |
-| Agent orchestration | LangGraph | Supports the familiar model-to-tools-to-model workflow and explicit agent state |
-| LLM integration | LangChain `ChatOpenAI` interface | Compatible with LangGraph tool calling and OpenRouter's OpenAI-compatible API |
-| LLM provider | OpenRouter | Provides configurable model access and has already been used in the course work |
-| Embedding model | `sentence-transformers/all-MiniLM-L6-v2` | Free, local, lightweight, and familiar from the course RAG exercise |
-| Vector database | Chroma | Persistent local vector storage already practiced in the course |
-| Document processing | LangChain document loaders and text splitters | Supports multiple formats, metadata, and configurable chunking |
-| MCP server implementation | FastMCP | Familiar tool-definition approach from the course agent project |
-| MCP client | `MultiServerMCPClient` from LangChain MCP Adapters | Discovers MCP tools and converts them into tools usable by LangGraph |
-| MCP transport | `stdio` | Simple local subprocess transport suitable for a single deployed service |
-| Structured HR storage | SQLite | Lightweight, file-based, free, and familiar from the course agent project |
-| Automated testing | pytest | Standard Python unit, integration, and smoke testing framework |
-| CI/CD | GitHub Actions | Meets the assignment requirement for automated checks on pushes or pull requests |
-| Initial deployment target | Render | Candidate for running the complete system as one web service |
+| Programming language | Python 3.14 | Implemented |
+| Web application | FastAPI | Implemented |
+| Web server | Uvicorn | Implemented |
+| Browser interface | HTML, CSS, and JavaScript | Implemented |
+| Agent orchestration | LangGraph `StateGraph` | Implemented |
+| LLM interface | LangChain `ChatOpenAI` | Implemented |
+| LLM provider | OpenRouter | Implemented and configurable |
+| Embedding model | `sentence-transformers/all-MiniLM-L6-v2` | Implemented locally on CPU |
+| Vector database | Chroma | Implemented |
+| Structured HR storage | SQLite | Implemented |
+| MCP implementation | FastMCP | Implemented |
+| MCP client | LangChain `MultiServerMCPClient` | Implemented |
+| MCP transport | `stdio` | Implemented |
+| Testing | Pytest | Implemented |
+| Continuous integration | GitHub Actions | Implemented |
+| Deployment target | Render | Planned |
 
-Package versions and the final hosted model will be selected and pinned only after compatibility and deployment-resource testing.
+Exact package versions are pinned in `requirements.txt`.
 
-## 3. Component Diagram
+## 3. Current Component Diagram
 
 ```text
-User's browser
-      |
-      v
-FastAPI application
-  - GET  /         browser chat interface
-  - POST /chat     structured agent response
-  - GET  /health   application and MCP status
-      |
-      v
-LangGraph HR agent -----------------------> OpenRouter LLM
-      |
-      v
+User browser
+     |
+     v
+FastAPI web application
+  GET  /
+  POST /api/chat
+  GET  /health
+     |
+     v
+LangGraph agent --------------------------> OpenRouter LLM
+     |
+     v
 MultiServerMCPClient
-      |
-      +---- stdio ----> Policy MCP server
-      |                    |
-      |                    +--> Chroma RAG index
-      |                    +--> Policy documents
-      |
-      +---- stdio ----> HR Operations MCP server
-                           |
-                           +--> SQLite employee records
-                           +--> SQLite PTO balances
-                           +--> SQLite mock HR tickets
-
-Policy ingestion and indexing
-      |
-      +--> LangChain loaders and splitters
-      +--> Local Hugging Face embedding model
-      +--> Persistent Chroma index
+     |
+     +---- stdio ----> Policy FastMCP server
+     |                    |
+     |                    v
+     |              RAG retrieval layer
+     |                    |
+     |                    v
+     |              Chroma vector index
+     |                    |
+     |                    v
+     |              Fictional policies
+     |
+     +---- stdio ----> HR FastMCP server
+                          |
+                          v
+                    HR service layer
+                          |
+                          v
+                    SQLite database
+                          |
+                          v
+                    Synthetic HR data
 ```
 
-## 4. Component Responsibilities
+The policy ingestion process runs separately before application startup:
 
-### FastAPI application
+```text
+Markdown and PDF policies
+          |
+          v
+Document loaders
+          |
+          v
+Heading-aware and recursive chunking
+          |
+          v
+Local embedding model
+          |
+          v
+Persistent Chroma collection
+```
 
-- Serve the browser chat page.
-- Accept user messages through `POST /chat`.
-- Validate incoming request data.
-- Invoke the LangGraph agent.
-- Return the final answer, citations, supporting snippets, operational trace, confirmation state, and errors in structured JSON.
-- Report application and MCP connectivity status through `GET /health`.
-- Avoid placing policy, database, or tool logic directly in route handlers.
+## 4. FastAPI Application
 
-### Browser chat interface
+The FastAPI application is defined in `app/main.py`.
 
-- Send user messages to `POST /chat`.
-- Display the assistant's final answer.
-- Display citations and supporting snippets separately from the answer.
-- Display a concise operational trace suitable for development and demonstration.
-- Clearly show when clarification or confirmation is required.
+### Current endpoints
 
-### LangGraph HR agent
+#### `GET /`
 
-- Interpret the user's intent.
-- Decide whether the request requires policy retrieval, structured HR data, or both.
-- Select and call tools discovered through MCP.
-- Continue the model-tools-model loop until it can answer, clarify, escalate, or request confirmation.
-- Combine tool outputs into a grounded response.
-- Preserve only operational trace information, not hidden chain-of-thought.
+Returns the browser chat interface.
 
-### Policy MCP server
+#### `POST /api/chat`
 
-- Expose policy retrieval tools through MCP.
-- Search the Chroma index for relevant policy chunks.
-- Retrieve a specific document section using stable identifiers.
-- Return structured evidence containing document ID, title, section, page or location where applicable, snippet, and relevance information.
-- Support preliminary policy-compliance checks using explicit policy rules and retrieved evidence.
+Accepts:
 
-### HR Operations MCP server
+```json
+{
+  "message": "User message",
+  "session_id": "optional-session-id"
+}
+```
 
-- Look up synthetic employee profiles.
-- Look up synthetic PTO balances.
-- Create clearly labeled mock HR tickets only when the application has received explicit confirmation.
-- Return structured results and useful not-found errors.
-- Never connect to a real HR system or use real employee data.
+Returns:
 
-### Policy ingestion and indexing process
+```json
+{
+  "session_id": "conversation-session-id",
+  "answer": "Agent response"
+}
+```
 
-- Load at least two supported source formats where feasible.
-- Clean and split documents using a justified, deterministic strategy.
-- Preserve citation metadata throughout ingestion and chunking.
-- Create embeddings locally with `all-MiniLM-L6-v2`.
-- Build or refresh the persistent Chroma index reproducibly.
+The application stores conversation state in process memory using the session ID.
 
-### OpenRouter LLM
+Policy citations currently appear inside the agent’s answer text.
 
-- Interpret requests and select bound tools.
-- Synthesize responses from tool results and policy evidence.
-- Use a model name supplied by configuration rather than one fixed in source code.
-- Receive credentials only through environment variables.
+#### `GET /health`
 
-## 5. MCP Server Separation
+Currently returns:
 
-The project will use two MCP servers.
+```json
+{
+  "status": "healthy",
+  "application": "Horizon HR Policy Agent"
+}
+```
 
-### Policy server
+### Application lifespan
 
-Planned tool responsibilities:
+When FastAPI starts, it:
 
-- `search_policy_documents`
-- `get_policy_section`
-- `check_policy_compliance`
+1. Creates the LangGraph agent.
+2. Discovers MCP tools through the multi-server client.
+3. Stores the agent in application state.
+4. Creates an in-memory conversation dictionary.
 
-### HR Operations server
+Conversation state is cleared when the application stops.
 
-Planned tool responsibilities:
+### Pending API improvements
 
-- `lookup_employee_profile`
-- `check_pto_balance`
-- `create_mock_hr_ticket`
+Before final deployment, the API and interface still need to provide or display:
 
-This separation keeps policy evidence and employee operations conceptually distinct, resembles the two-server course example, and provides a clear architecture to explain in the demonstration.
-
-The final tool schemas and exact return objects will be designed before implementation.
-
-## 6. Request Data Flow
-
-For a typical multi-step request:
-
-1. The browser sends the user's message to `POST /chat`.
-2. FastAPI validates the request and invokes the LangGraph agent.
-3. LangGraph sends the conversation state to the configured OpenRouter model with the discovered MCP tools bound.
-4. The model requests one or more appropriate tool calls.
-5. `MultiServerMCPClient` sends each call to the correct MCP server over `stdio`.
-6. The MCP server reads the policy index or synthetic SQLite data and returns a structured result.
-7. LangGraph records a concise operational trace and supplies tool results back to the model.
-8. The loop continues until the agent can answer, request clarification, recommend escalation, or ask for confirmation.
-9. FastAPI returns structured JSON containing the result and supporting information.
-10. The browser displays the response, evidence, and trace in distinct sections.
-
-## 7. Planned API Shape
-
-### `GET /`
-
-Return the lightweight browser chat interface.
-
-### `POST /chat`
-
-Accept a user message and conversation context. The response will be designed to include:
-
-- Final answer
-- Policy citations
+- Structured policy citations
 - Supporting snippets
-- Concise MCP tool-call trace
-- Clarification or escalation information
-- Confirmation requirement and pending mock action, when applicable
-- Safe, readable error information
+- Concise operational tool traces
+- MCP connectivity information in the health response where feasible
+- Clear confirmation and escalation state where useful
 
-The exact request and response schemas will be defined when the API is implemented.
+## 5. Browser Interface
 
-### `GET /health`
+The browser interface is stored in `app/templates/index.html`.
 
-Return JSON describing:
+It currently:
 
-- Overall application status
-- Agent initialization status
-- MCP tool discovery or connectivity status where feasible
-- Non-sensitive version or configuration information useful for grading
+- Accepts user messages
+- Sends them to `POST /api/chat`
+- Preserves the returned session ID
+- Displays the final agent answer
+- Shows policy citations when the agent includes them in the answer
 
-The health response will never expose API keys or other secrets.
+A clearer display for structured citations, supporting snippets, and concise MCP tool traces remains pending.
 
-## 8. Persistence and Deployment Model
+## 6. LangGraph Agent
 
-The initial deployment will use one web service containing:
+The agent is defined in `agent/graph.py`.
 
-- The FastAPI web process
-- The LangGraph agent and MCP client
-- Both local MCP server subprocesses
-- The policy files
-- The persistent Chroma index, or a reproducible index built during deployment
-- The synthetic SQLite data files
+It uses two primary nodes:
 
-This avoids paid databases and separate paid services. The final index build strategy will be chosen after deployment-resource and startup-time testing.
+```text
+START
+  |
+  v
+agent
+  |
+  +-- no tool call --> END
+  |
+  +-- tool call ----> tools
+                         |
+                         v
+                       agent
+```
 
-Render is the initial deployment candidate. Current plan capabilities, resource limits, startup behavior, and deployment commands will be verified before deployment. If Render is unsuitable at that time, an equivalent free-tier or zero-cost platform may be selected and documented.
+### Agent node
 
-## 9. Configuration and Secrets
+The agent node:
 
-- `OPENROUTER_API_KEY` will be read from an environment variable.
-- The OpenRouter model name will be configurable through an environment variable or application setting.
-- File locations and deployment-specific settings will use centralized configuration.
-- A safe `.env.example` will document required variables without real values.
-- `.env`, local virtual environments, and secret-bearing files will be excluded from Git.
-- No API key will be assigned directly in Python source code.
+1. Checks the original user message for invalid employee-ID references.
+2. Adds the system prompt to the conversation.
+3. Sends the conversation and bound MCP tools to the configured LLM.
+4. Returns the model response.
 
-## 10. Safety and Traceability
+### Tool node
 
-- All policy and employee information will be fictional or synthetic.
-- The agent will use evidence returned through MCP tools rather than asserting unsupported policy facts.
-- Missing evidence will result in a limitation statement, clarification, or escalation.
-- Consequential-looking actions will be mock actions.
-- Explicit user confirmation will be required before creating a mock HR ticket or similar record.
-- Operational traces will contain tool names, arguments, summarized results, retrieved sources, and the response basis.
-- Hidden chain-of-thought will not be recorded or displayed.
-- Tool and application failures will be translated into safe, useful responses.
+LangGraph’s `ToolNode` executes MCP tools selected by the LLM and returns their results to the agent node.
 
-## 11. Testing Boundaries
+The loop continues until the LLM produces a response without another tool call.
 
-The architecture must allow automated verification of:
+### Model configuration
 
-- Application import and startup
-- API health response
-- MCP tool discovery
-- At least one genuine MCP tool call
-- Policy retrieval and citation metadata
-- Synthetic employee and PTO lookup
-- Agent tool selection for representative tasks
-- Confirmation before mock actions
-- Missing data, missing evidence, and unavailable-tool behavior
+`agent/model.py` creates a `ChatOpenAI` client configured for OpenRouter.
 
-## 12. Architecture Decisions Deferred Until Testing
+Configuration is read from environment variables:
 
-The following choices remain deliberately open:
+- `OPENROUTER_API_KEY`
+- `OPENROUTER_MODEL`
 
-- Exact pinned package versions
-- Exact OpenRouter chat model
-- Retrieval `k`
-- Chunk size and overlap
-- Whether to commit the completed Chroma index or rebuild it during deployment
-- Detailed API request and response schemas
-- Detailed MCP tool input and output schemas
-- Final Render start command and persistence behavior
-- Whether an optional `draft_hr_email` MCP tool adds enough value to include
+The model uses:
 
-These decisions will be made one at a time using implementation evidence and evaluation results.
+- Temperature `0`
+- A 60-second timeout
+- Up to two retries
+
+The model name is configurable rather than hard-coded in Python.
+
+## 7. MCP Client
+
+The MCP client is defined in `agent/mcp_client.py`.
+
+It creates one `MultiServerMCPClient` connected to two local servers:
+
+- `policy`
+- `hr`
+
+Both servers:
+
+- Run as Python child processes
+- Use the same Python interpreter as the main application
+- Run from the project root
+- Communicate through `stdio`
+
+Tool-name prefixes are enabled, producing names such as:
+
+- `policy_search_policies`
+- `hr_get_pto_balance`
+
+Tool errors are returned in a form the agent can handle.
+
+## 8. Policy MCP Server
+
+The policy server is defined in `mcp_servers/policy_server.py`.
+
+It exposes:
+
+### `policy_health_check`
+
+Confirms that the policy server is responding.
+
+### `policy_search_policies`
+
+Accepts:
+
+- Search query
+- Number of results
+- Optional policy document ID
+- Optional result diversification
+
+It returns ranked citation-ready evidence containing:
+
+- Rank
+- Relevance score
+- Document ID
+- Policy title
+- Section
+- Page number
+- Chunk ID
+- Source filename
+- Snippet
+- Full chunk content
+
+The Chroma store is loaded before the MCP server begins accepting requests. This avoids loading the embedding model during the first tool request.
+
+## 9. HR MCP Server
+
+The HR server is defined in `mcp_servers/hr_server.py`.
+
+It exposes:
+
+### `hr_health_check`
+
+Confirms that the HR server is responding.
+
+### `hr_get_employee_summary`
+
+Returns a limited synthetic employee profile.
+
+### `hr_get_pto_balance`
+
+Returns synthetic PTO balance information.
+
+### `hr_get_benefits_status`
+
+Returns synthetic benefits information.
+
+### `hr_create_hr_ticket`
+
+Creates a clearly labeled mock HR ticket after explicit user confirmation.
+
+Employee IDs are validated before the HR service queries SQLite.
+
+## 10. Policy Ingestion and Chunking
+
+Policy ingestion is implemented under `ingestion/`.
+
+### Supported source formats
+
+- Markdown
+- PDF
+
+### Markdown chunking
+
+Markdown documents are first divided using level-two and level-three headings.
+
+### Size-based chunking
+
+Heading sections and PDF pages are processed with a recursive character splitter configured with:
+
+- Chunk size: 1,000 characters
+- Chunk overlap: 150 characters
+
+This approach preserves policy structure when possible while limiting chunk size.
+
+### Deterministic metadata
+
+Each chunk receives stable citation metadata:
+
+- Document ID
+- Title
+- Section
+- Page number
+- Chunk index
+- Stable chunk ID
+- Source filename
+- Source format
+- Source snippet
+
+The current corpus produces 177 chunks.
+
+## 11. Embeddings and Chroma
+
+The vector-store implementation is in `ingestion/vector_store.py`.
+
+### Embedding model
+
+```text
+sentence-transformers/all-MiniLM-L6-v2
+```
+
+The model:
+
+- Runs locally
+- Uses CPU
+- Normalizes embeddings
+- Does not require an embedding API key
+
+### Chroma collection
+
+The collection is named:
+
+```text
+horizon_policies
+```
+
+The default local path is:
+
+```text
+data/chroma
+```
+
+The Chroma index is generated and excluded from Git because it can be reproduced from the committed policy documents.
+
+## 12. Policy Retrieval
+
+Retrieval is implemented in `rag/retrieval.py`.
+
+It supports:
+
+- Semantic similarity search
+- Configurable `k` between 1 and 10
+- Optional filtering by policy document ID
+- Optional diversification across policy documents
+- Relevance scores
+- Citation-ready structured results
+
+The default policy MCP search returns five results.
+
+The vector store is cached within the policy-server process after it is opened.
+
+## 13. SQLite Data Layer
+
+SQLite access is implemented under `database/`.
+
+The default database path is:
+
+```text
+data/hr_data.db
+```
+
+The database contains:
+
+- Employee profiles
+- Manager relationships
+- PTO balances
+- Benefits records
+- Mock HR tickets
+
+The database is built from committed JSON files under `mock_data/`.
+
+The generated database is excluded from Git because it can be recreated with:
+
+```cmd
+python -m database.seed
+```
+
+Foreign-key enforcement is enabled for every SQLite connection.
+
+## 14. Safety Architecture
+
+Safety controls exist at several layers.
+
+### Before the LLM
+
+The LangGraph agent checks the original user message for an employee reference that omits the required `E` prefix.
+
+This prevents the LLM from changing an invalid ID such as `1002` into a valid employee ID and exposing data.
+
+### MCP tool boundary
+
+The HR MCP server validates every employee ID using the `E####` format.
+
+### HR service boundary
+
+Ticket creation requires a `confirmed_by_user` value and rejects unconfirmed requests.
+
+### System prompt
+
+The system prompt requires the agent to:
+
+- Use policy tools for company-policy answers
+- Avoid unsupported general HR knowledge
+- Use minimal employee information
+- Avoid approving HR requests
+- Require explicit ticket confirmation
+- Avoid speculation when records are missing
+- Escalate missing, unclear, or conflicting evidence
+
+### Error handling
+
+Expected validation errors are converted into readable messages.
+
+Unexpected internal errors are replaced with a generic safe response.
+
+## 15. Testing and Evaluation
+
+The automated test suite currently contains 40 passing tests covering:
+
+- Policy loading
+- Citation metadata
+- Chunking
+- Retrieval
+- Database creation and services
+- Employee-ID validation
+- Confirmation logic
+- Agent behavior
+- FastAPI import and endpoints
+
+GitHub Actions successfully runs the project on a clean Linux runner.
+
+The current evaluation system combines:
+
+- Deterministic tool-selection checks
+- Deterministic citation checks
+- Explicit forbidden-phrase checks
+- An LLM judge for correctness, grounding, safety, and semantic criteria
+
+The existing 10-case baseline passes all cases.
+
+Still required:
+
+- Expand to 20–30 cases
+- Report required behavior metrics
+- Add warm latency p50 and p95
+- Measure deployed cold-start latency
+- Run an ablation or comparison
+
+## 16. Current Local Runtime
+
+Before starting the application locally:
+
+1. Build the Chroma index.
+2. Seed the SQLite database.
+3. Start FastAPI with Uvicorn.
+
+```cmd
+python -m ingestion.build_index --recreate
+python -m database.seed
+python -m uvicorn app.main:app --reload
+```
+
+FastAPI starts both MCP servers as local child processes when it creates the agent.
+
+## 17. Planned Deployment Architecture
+
+The planned Render deployment will use one web service containing:
+
+- FastAPI
+- LangGraph
+- The MCP client
+- Both MCP server subprocesses
+- Chroma
+- SQLite
+- Policy documents
+- Synthetic source data
+
+The deployment build process is expected to:
+
+1. Install dependencies.
+2. Build the Chroma policy index.
+3. Seed the SQLite database.
+4. Start the FastAPI application with Uvicorn.
+
+Render environment variables will supply the API key, model name, and data paths.
+
+Because Render’s free filesystem is temporary, Chroma and SQLite will be recreated during deployment. Mock ticket changes will not be durable across restarts on the free service.
+
+The final build command, start command, health URL, cold-start behavior, and persistence limitations will be documented after deployment testing.
+
+## 18. Known Limitations and Pending Enhancements
+
+The current architecture has these known limitations:
+
+- Conversation state exists only in application memory.
+- Conversation history is lost when the application restarts.
+- SQLite ticket changes are local and non-durable on free deployment.
+- Chroma and the embedding model increase build and startup resource use.
+- The API does not yet return separate structured citations or tool traces.
+- The UI does not yet show a dedicated operational trace.
+- `/health` does not yet test MCP connectivity.
+- The evaluation dataset contains 10 rather than 20–30 cases.
+- Deployment has not yet been completed.
