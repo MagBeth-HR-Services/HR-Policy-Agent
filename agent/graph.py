@@ -18,9 +18,8 @@ def choose_next_step(state: MessagesState):
     return END
 
 
-async def create_hr_agent():
-    """Build and compile the HR agent workflow."""
-    tools = await load_agent_tools()
+def build_hr_agent(tools):
+    """Build and compile the HR agent workflow from MCP tools."""
     model = create_chat_model()
     model_with_tools = model.bind_tools(tools)
 
@@ -64,7 +63,10 @@ async def create_hr_agent():
     workflow = StateGraph(MessagesState)
 
     workflow.add_node("agent", call_model)
-    workflow.add_node("tools", ToolNode(tools))
+    workflow.add_node(
+        "tools",
+        ToolNode(tools, handle_tool_errors=True),
+    )
 
     workflow.add_edge(START, "agent")
 
@@ -80,3 +82,9 @@ async def create_hr_agent():
     workflow.add_edge("tools", "agent")
 
     return workflow.compile()
+
+
+async def create_hr_agent():
+    """Load MCP tools and compile the HR agent workflow."""
+    tools = await load_agent_tools()
+    return build_hr_agent(tools)

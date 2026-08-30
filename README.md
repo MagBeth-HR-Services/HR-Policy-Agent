@@ -22,12 +22,13 @@ The application currently runs locally and includes:
 - Seven MCP tools available to the agent
 - A LangGraph tool-calling agent
 - Employee-ID and confirmation safety controls
-- A FastAPI chat interface
-- Unit and smoke tests
-- A hybrid deterministic and LLM-based evaluation runner
+- A FastAPI chat interface with citations, snippets, and MCP tool traces
+- Unit and smoke tests, including retrieval and MCP discovery
+- A 24-case evaluation runner with gold answers, aggregate metrics, and an ablation flag
 - GitHub Actions continuous integration
+- Drafts of `design-and-evaluation.md`, `ai-tooling.md`, and `deployed.md`
 
-Deployment and final project documentation are still in progress.
+A shareable Render URL is still required before the demonstration video.
 
 ## Main Technologies
 
@@ -148,7 +149,7 @@ Open `.env` and replace the placeholder with your own OpenRouter API key.
 
 ```text
 OPENROUTER_API_KEY=your-private-key
-OPENROUTER_MODEL=poolside/laguna-xs-2.1:free
+OPENROUTER_MODEL=poolside/laguna-s-2.1:free
 CHROMA_PATH=./data/chroma
 HR_DATABASE_PATH=./data/hr_data.db
 ```
@@ -278,7 +279,7 @@ Run the complete test suite:
 python -m pytest -v
 ```
 
-The repository currently contains 40 passing automated tests covering:
+The repository currently contains 51 passing automated tests covering:
 
 - Policy loading
 - Chunking
@@ -309,10 +310,17 @@ The evaluator combines:
 - Required policy citation checks
 - Explicit forbidden-phrase safety checks
 - An LLM judge for factual correctness, grounding, safety, and semantic criteria
+- Gold / expected answers on each case
+- Aggregate groundedness, citation, tool-selection, workflow, clarification, and safety rates
+- Warm latency p50 and p95
+- An optional `--ablation no-policy-search` comparison
 
-The current 10-case baseline passes all cases. The evaluation set will be expanded to the assignment-required 20–30 cases, with latency metrics and an ablation comparison added before submission.
+```cmd
+python -m evaluation.run_evaluation
+python -m evaluation.run_evaluation --ablation no-policy-search
+```
 
-The evaluation uses additional OpenRouter requests because both the agent and the judge call an LLM.
+The current committed `evaluation/results.json` is the earlier 10-case baseline. Re-run the 24-case suite before submission.
 
 ## Manual Diagnostic Commands
 
@@ -397,9 +405,29 @@ Chroma and SQLite are recreated from the committed fictional source data.
 
 ## Deployment
 
-Deployment to Render is planned but not yet complete.
+Deployment to Render is prepared but the live URL is not up yet.
 
-The deployed application URL, health endpoint, build instructions, and expected free-tier cold-start behavior will be added after deployment.
+Recommended host: **one Render web service on Standard (2 GB RAM)**. Free and Starter (512 MB) are too small for local MiniLM plus two MCP processes. This keeps the assignment's single-service architecture. Do not add a paid database.
+
+Build command:
+
+```text
+pip install -r requirements.txt && python -m ingestion.build_index --recreate && python -m database.seed
+```
+
+Start command:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Set `OPENROUTER_API_KEY` in the Render dashboard. Other variables are listed in `render.yaml` and `.env.example`.
+
+`render.yaml` has `autoDeploy: false` so you deploy only after GitHub Actions is green.
+
+After the service exists, put the public URL in `README.md` and `deployed.md`. Time the first request after deploy and record it as cold-start latency.
+
+Blueprint file: `render.yaml`. Python pin: `.python-version`.
 
 ## Project Documentation
 
@@ -409,11 +437,12 @@ The deployed application URL, health endpoint, build instructions, and expected 
 - `evaluation/` — evaluation cases, runner, and results
 - `mock_data/DATA_SCHEMA.md` — synthetic data schema
 
-The following final submission documents are still being prepared:
+The following final submission documents are in the repository. Fill in the live URL after Render deploy, and replace evaluation metrics after a 24-case OpenRouter run:
 
 - `design-and-evaluation.md`
 - `ai-tooling.md`
 - `deployed.md`
+- `HOW_TO_FINISH.md`
 
 ## License and Data Notice
 

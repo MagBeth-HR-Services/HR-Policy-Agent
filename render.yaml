@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: horizon-hr-policy-agent
+    runtime: python
+    plan: standard
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt && python -m ingestion.build_index --recreate && python -m database.seed
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.3
+      - key: CHROMA_PATH
+        value: ./data/chroma
+      - key: HR_DATABASE_PATH
+        value: ./data/hr_data.db
+      - key: OPENROUTER_MODEL
+        value: poolside/laguna-s-2.1:free
+      - key: OPENROUTER_API_KEY
+        sync: false

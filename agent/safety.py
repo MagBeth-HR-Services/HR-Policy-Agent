@@ -18,6 +18,12 @@ EXPLICIT_CONFIRMATIONS = {
     "proceed",
 }
 
+MCP_UNAVAILABLE_MESSAGE = (
+    "The HR policy tools are temporarily unavailable. "
+    "I cannot look up policies or employee records right now. "
+    "Please try again shortly or contact Human Resources."
+)
+
 
 def validate_employee_id(employee_id: str) -> str:
     """Validate and normalize a Horizon employee ID."""
@@ -53,6 +59,21 @@ def safe_error_message(error: Exception) -> str:
         (ValueError, PermissionError),
     ):
         return str(error)
+
+    error_name = type(error).__name__
+    error_text = str(error).lower()
+
+    if (
+        error_name == "RateLimitError"
+        or "error code: 429" in error_text
+        or "rate-limited" in error_text
+        or "rate limit" in error_text
+    ):
+        return (
+            "The language-model provider is temporarily rate-limited. "
+            "Please wait a minute and try again, or switch OPENROUTER_MODEL "
+            "in .env to another tool-capable free model."
+        )
 
     return (
         "The requested operation could not be completed. "

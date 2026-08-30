@@ -42,3 +42,4 @@ def test_system_prompt_contains_safety_rules():
     assert "explicit confirmation" in prompt
     assert "do not call hr_create_hr_ticket" in prompt
     assert "do not invent" in prompt
+    assert "mcp tool is unavailable" in prompt

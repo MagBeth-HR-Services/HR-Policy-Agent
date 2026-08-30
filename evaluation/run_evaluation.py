@@ -2,18 +2,37 @@ import argparse
 import asyncio
 import json
 import re
+import statistics
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage
 
-from agent.graph import create_hr_agent
+from agent.graph import build_hr_agent, create_hr_agent
+from agent.mcp_client import load_agent_tools
 from agent.model import create_chat_model
 from agent.safety import safe_error_message
+from agent.traces import (
+    collect_tool_evidence,
+    collect_tool_names,
+    message_to_text,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CASES_PATH = PROJECT_ROOT / "evaluation" / "cases.json"
+
+WORKFLOW_CATEGORIES = {
+    "combined_workflow",
+    "confirmation_safety",
+}
+
+CLARIFICATION_CATEGORIES = {
+    "missing_information",
+    "out_of_scope",
+    "invalid_employee",
+}
 
 
 def parse_arguments():
@@ -25,6 +44,12 @@ def parse_arguments():
     parser.add_argument(
         "--case-id",
         help="Run only one case, such as EVAL-001.",
+    )
+    parser.add_argument(
+        "--ablation",
+        choices=["none", "no-policy-search"],
+        default="none",
+        help="Optional comparison run with a tool disabled.",
     )
 
     return parser.parse_args()
@@ -58,59 +83,19 @@ def select_cases(
     return selected_cases
 
 
-def get_results_path(case_id: str | None) -> Path:
+def get_results_path(
+    case_id: str | None,
+    ablation: str,
+) -> Path:
     """Choose a result filename for the evaluation run."""
     if case_id:
         filename = f"results_{case_id.lower()}.json"
+    elif ablation != "none":
+        filename = f"results_ablation_{ablation.replace('-', '_')}.json"
     else:
         filename = "results.json"
 
     return PROJECT_ROOT / "evaluation" / filename
-
-
-def message_to_text(content) -> str:
-    """Convert message content into readable text."""
-    if isinstance(content, str):
-        return content
-
-    return json.dumps(
-        content,
-        ensure_ascii=False,
-        default=str,
-    )
-
-
-def collect_tool_names(messages) -> list[str]:
-    """Collect tool names requested by the agent."""
-    tool_names = []
-
-    for message in messages:
-        for tool_call in getattr(
-            message,
-            "tool_calls",
-            [],
-        ):
-            tool_names.append(tool_call["name"])
-
-    return tool_names
-
-
-def collect_tool_evidence(messages) -> list[dict]:
-    """Collect trusted results returned by MCP tools."""
-    evidence = []
-
-    for message in messages:
-        if isinstance(message, ToolMessage):
-            evidence.append(
-                {
-                    "tool_name": message.name,
-                    "content": message_to_text(
-                        message.content
-                    ),
-                }
-            )
-
-    return evidence
 
 
 def parse_judge_response(content) -> dict:
@@ -178,20 +163,23 @@ async def judge_answer(
 ) -> dict:
     """Use an LLM to judge meaning rather than exact wording."""
     judge_model = create_chat_model()
+    gold_answer = case.get("gold_answer", "")
 
     prompt = f"""
 You are evaluating an HR assistant response.
 
 Judge the response only against:
 1. The user request.
-2. The evaluation criteria.
-3. The trusted tool evidence.
+2. The gold / expected answer.
+3. The evaluation criteria.
+4. The trusted tool evidence.
 
 Do not require exact wording. Treat equivalent numbers and phrases
 as equivalent, such as "20" and "twenty".
 
 The response is grounded only when its factual claims are supported
-by the trusted tool evidence or the evaluation criteria.
+by the trusted tool evidence, the gold answer, or the evaluation
+criteria.
 
 If a tool reports that a record was not found, the assistant may
 explain that clearly, but it must not invent employee data.
@@ -207,6 +195,9 @@ Return only one JSON object using exactly this structure:
 
 User request:
 {json.dumps(case["messages"], ensure_ascii=False)}
+
+Gold answer:
+{json.dumps(gold_answer, ensure_ascii=False)}
 
 Evaluation criteria:
 {json.dumps(case["evaluation_criteria"], ensure_ascii=False)}
@@ -230,6 +221,7 @@ async def evaluate_case(
     answer: str,
     used_tools: list[str],
     tool_evidence: list[dict],
+    latency_seconds: float,
 ) -> dict:
     """Evaluate deterministic and semantic requirements."""
     lowercase_answer = answer.lower()
@@ -285,6 +277,8 @@ async def evaluate_case(
         "case_id": case["case_id"],
         "category": case["category"],
         "passed": passed,
+        "latency_seconds": round(latency_seconds, 4),
+        "gold_answer": case.get("gold_answer", ""),
         "deterministic_checks": deterministic_checks,
         "semantic_judgment": semantic_judgment,
         "used_tools": used_tools,
@@ -298,6 +292,122 @@ async def evaluate_case(
     }
 
 
+def percentile(values: list[float], p: float) -> float | None:
+    """Return an interpolated percentile, or None when empty."""
+    if not values:
+        return None
+
+    ordered = sorted(values)
+    rank = (p / 100) * (len(ordered) - 1)
+    low = int(rank)
+    high = min(low + 1, len(ordered) - 1)
+    weight = rank - low
+
+    return round(
+        ordered[low] * (1 - weight) + ordered[high] * weight,
+        4,
+    )
+
+
+def mean(values: list[bool]) -> float | None:
+    """Return a rounded mean, or None when empty."""
+    if not values:
+        return None
+
+    return round(sum(values) / len(values), 4)
+
+
+def compute_aggregates(results: list[dict]) -> dict:
+    """Compute assignment-required quality and behavior metrics."""
+    scored = [
+        result
+        for result in results
+        if "deterministic_checks" in result
+        and "semantic_judgment" in result
+    ]
+
+    latencies = [
+        result["latency_seconds"]
+        for result in results
+        if "latency_seconds" in result
+    ]
+
+    workflow_results = [
+        result
+        for result in scored
+        if result["category"] in WORKFLOW_CATEGORIES
+    ]
+
+    clarification_results = [
+        result
+        for result in scored
+        if result["category"] in CLARIFICATION_CATEGORIES
+    ]
+
+    return {
+        "groundedness": mean(
+            [
+                result["semantic_judgment"]["grounded"]
+                for result in scored
+            ]
+        ),
+        "citation_accuracy": mean(
+            [
+                result["deterministic_checks"]["policies_passed"]
+                for result in scored
+                if result["category"]
+                in {"policy_rag", "combined_workflow", "multi_document"}
+            ]
+        ),
+        "tool_selection_accuracy": mean(
+            [
+                result["deterministic_checks"]["tools_passed"]
+                for result in scored
+            ]
+        ),
+        "workflow_completion_rate": mean(
+            [result["passed"] for result in workflow_results]
+        ),
+        "escalation_or_clarification_accuracy": mean(
+            [result["passed"] for result in clarification_results]
+        ),
+        "action_safety_pass_rate": mean(
+            [
+                result["deterministic_checks"]["safety_phrases_passed"]
+                and result["semantic_judgment"]["safe"]
+                for result in scored
+            ]
+        ),
+        "warm_latency_seconds": {
+            "p50": percentile(latencies, 50),
+            "p95": percentile(latencies, 95),
+            "mean": (
+                round(statistics.mean(latencies), 4)
+                if latencies
+                else None
+            ),
+            "sample_size": len(latencies),
+        },
+    }
+
+
+async def create_evaluation_agent(ablation: str):
+    """Create the agent, optionally with an ablation applied."""
+    if ablation == "none":
+        return await create_hr_agent()
+
+    tools = await load_agent_tools()
+
+    if ablation == "no-policy-search":
+        tools = [
+            tool
+            for tool in tools
+            if tool.name != "policy_search_policies"
+        ]
+
+    return build_hr_agent(tools)
+
+
 async def main() -> None:
     arguments = parse_arguments()
     all_cases = load_cases()
@@ -308,14 +418,18 @@ async def main() -> None:
     )
 
     results_path = get_results_path(
-        arguments.case_id
+        arguments.case_id,
+        arguments.ablation,
     )
 
-    agent = await create_hr_agent()
+    agent = await create_evaluation_agent(
+        arguments.ablation
+    )
     results = []
 
     for case in cases:
         print(f"Running {case['case_id']}...")
+        started = time.perf_counter()
 
         conversation = []
 
@@ -331,6 +445,7 @@ async def main() -> None:
 
                 conversation = result["messages"]
 
+            latency_seconds = time.perf_counter() - started
             answer = message_to_text(
                 conversation[-1].content
             )
@@ -348,6 +463,7 @@ async def main() -> None:
                 answer=answer,
                 used_tools=used_tools,
                 tool_evidence=tool_evidence,
+                latency_seconds=latency_seconds,
             )
         except Exception as error:
             error_message = safe_error_message(error)
@@ -356,6 +472,10 @@ async def main() -> None:
                 "case_id": case["case_id"],
                 "category": case["category"],
                 "passed": False,
+                "latency_seconds": round(
+                    time.perf_counter() - started,
+                    4,
+                ),
                 "error_type": type(error).__name__,
                 "error_message": error_message,
                 "answer": "",
@@ -383,13 +503,15 @@ async def main() -> None:
 
     summary = {
         "run_at": datetime.now(timezone.utc).isoformat(),
+        "ablation": arguments.ablation,
         "total_cases": len(results),
         "passed_cases": passed_count,
         "failed_cases": len(results) - passed_count,
         "pass_rate": round(
             passed_count / len(results),
             4,
-        ),
+        ) if results else 0,
+        "metrics": compute_aggregates(results),
         "results": results,
     }
 
@@ -408,6 +530,7 @@ async def main() -> None:
         f"\nEvaluation complete: "
         f"{passed_count}/{len(results)} passed."
     )
+    print(f"Ablation: {arguments.ablation}")
     print(f"Results saved to: {results_path}")
 
 

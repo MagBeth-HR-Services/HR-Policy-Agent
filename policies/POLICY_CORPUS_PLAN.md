@@ -24,6 +24,17 @@ The corpus will contain 11 documents in Markdown and PDF formats, totaling appro
 
 **Planned total:** approximately 43 pages.
 
+## Verified corpus size
+
+Counted on 28 August 2026:
+
+- 11 policy documents (9 Markdown, 2 PDF)
+- PDF page count from the files: POL-003 = 9 pages, POL-005 = 9 pages (18 PDF pages)
+- Markdown word count: 8,410 words, treated as about 28 pages at 300 words per page
+- **Combined total: approximately 46 pages**, inside the assignment band of 30–120 pages
+
+The PDF files are longer than the original 5-page estimate. The Markdown files are slightly shorter than planned. No corpus rewrite is required.
+
 ## Required Coverage
 
 The documents will collectively cover:

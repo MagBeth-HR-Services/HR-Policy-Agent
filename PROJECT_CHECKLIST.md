@@ -27,7 +27,7 @@ This checklist translates the project brief into verifiable requirements.
 ## 3. Policy Corpus
 
 - [x] Create 5–20 coherent company policy and procedure documents.
-- [ ] Verify and document that the corpus totals approximately 30–120 pages.
+- [x] Verify and document that the corpus totals approximately 30–120 pages.
 - [x] Cover PTO, holidays, remote work, expenses, security, benefits, onboarding, equipment, leave, and conduct.
 - [x] Support at least two source formats.
 - [x] Ensure the repository contains no private, paid, or improperly licensed material.
@@ -72,7 +72,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Continue the model-tools-model loop until a final response is available.
 - [x] Avoid exposing hidden chain-of-thought.
 - [ ] Verify both selected multi-step demonstration workflows end-to-end.
-- [ ] Produce a concise user-visible operational trace containing selected tools, arguments, outputs, sources, response basis, and escalation decisions.
+- [x] Produce a concise user-visible operational trace containing selected tools, arguments, outputs, sources, response basis, and escalation decisions.
 
 ## 8. MCP Servers and Tools
 
@@ -101,8 +101,8 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Prevent the agent from claiming to approve HR requests.
 - [x] Include escalation behavior for sensitive or unsupported cases.
 - [x] Hide unexpected internal error details.
-- [ ] Add and verify graceful behavior when an MCP server is unavailable.
-- [ ] Expand testing for materially ambiguous requests.
+- [x] Add and verify graceful behavior when an MCP server is unavailable.
+- [x] Expand testing for materially ambiguous requests.
 
 ## 10. Web Application
 
@@ -112,9 +112,9 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Maintain conversation state using session IDs.
 - [x] Display the final agent response.
 - [x] Display citations when included in the agent’s answer.
-- [ ] Return structured citations and snippets separately from the answer.
-- [ ] Return and display a concise MCP tool-call trace.
-- [ ] Include MCP connectivity status in the health response where feasible.
+- [x] Return structured citations and snippets separately from the answer.
+- [x] Return and display a concise MCP tool-call trace.
+- [x] Include MCP connectivity status in the health response where feasible.
 - [ ] Verify both demonstration workflows through the final deployed interface.
 
 ## 11. Automated Testing
@@ -140,7 +140,8 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Run an application import check.
 - [x] Run automated tests in the workflow.
 - [x] Verify the workflow passes on a clean Linux runner.
-- [ ] Ensure deployment occurs only after CI passes.
+- [x] Run an MCP tool-discovery or MCP tool-call check inside GitHub Actions.
+- [x] Ensure deployment occurs only after CI passes.
 
 ## 13. Deployment
 
@@ -149,23 +150,24 @@ This checklist translates the project brief into verifiable requirements.
 - [ ] Configure deployed secrets using environment variables.
 - [ ] Build Chroma during deployment.
 - [ ] Seed SQLite during deployment.
-- [ ] Avoid requiring a paid database.
+- [x] Avoid requiring a paid database.
 - [ ] Verify both agentic workflows in the deployed application.
-- [ ] Document expected free-tier cold-start behavior.
+- [x] Document expected free-tier cold-start behavior.
 - [ ] Record the deployed application and health URLs in `deployed.md`.
 
 ## 14. Evaluation Dataset
 
-- [ ] Expand the evaluation dataset to 20–30 questions or tasks.
+- [x] Expand the evaluation dataset to 20–30 questions or tasks.
 - [x] Include straightforward policy questions.
-- [ ] Include questions requiring evidence from multiple policy documents.
+- [x] Include questions requiring evidence from multiple policy documents.
 - [x] Include employee-data tool questions.
 - [x] Include combined policy and employee-data workflows.
 - [x] Include incomplete requests requiring clarification.
 - [x] Include invalid and unknown employee cases.
 - [x] Include confirmation-safety cases.
-- [ ] Add explicit out-of-scope requests.
+- [x] Add explicit out-of-scope requests.
 - [x] Provide semantic scoring criteria for each current case.
+- [x] Provide a gold / expected answer for each evaluation case.
 - [x] Store cases, scripts, and results under `evaluation/`.
 
 ## 15. Evaluation Results
@@ -191,7 +193,7 @@ This checklist translates the project brief into verifiable requirements.
 
 ## 16. Design Documentation
 
-- [ ] Create `design-and-evaluation.md`.
+- [x] Create `design-and-evaluation.md`.
 - [x] Maintain an up-to-date `ARCHITECTURE.md`.
 - [x] Document the current web app, agent, MCP client, MCP servers, Chroma index, SQLite data, and LLM provider.
 - [x] Include a text-based architecture diagram.
@@ -213,10 +215,10 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Document evaluation commands.
 - [x] Document CI behavior.
 - [x] Document contributor setup and branch workflow.
-- [ ] Add final deployment instructions to `README.md`.
-- [ ] Create `ai-tooling.md`.
-- [ ] Explain what AI assistance worked well and what did not.
-- [ ] Create `deployed.md`.
+- [x] Add final deployment instructions to `README.md`.
+- [x] Create `ai-tooling.md`.
+- [x] Explain what AI assistance worked well and what did not.
+- [x] Create `deployed.md`.
 - [x] Keep all current source code in the repository.
 
 ## 18. Demonstration Video
@@ -236,7 +238,7 @@ This checklist translates the project brief into verifiable requirements.
 - [ ] Verify the repository contains no API keys, credentials, private data, or unnecessary environment files.
 - [ ] Verify a new contributor can follow the README and run the application.
 - [x] Verify CI passes from a clean checkout.
-- [ ] Verify all required files and folders are present.
+- [x] Verify all required files and folders are present.
 - [ ] Verify citations, snippets, and tool traces are readable in the deployed UI.
 - [ ] Verify both demonstration workflows immediately before recording.
 - [ ] Review this entire checklist against the final implementation.
