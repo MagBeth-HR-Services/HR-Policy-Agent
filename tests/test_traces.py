@@ -1,11 +1,16 @@
 import json
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import (
+    AIMessage,
+    HumanMessage,
+    ToolMessage,
+)
 
 from agent.traces import (
     collect_citations,
     collect_tool_names,
     collect_tool_trace,
+    messages_for_latest_turn,
     unwrap_mcp_content,
 )
 
@@ -19,8 +24,14 @@ POLICY_RESULT = {
     "page_number": 0,
     "chunk_id": "POL-004-C0008",
     "source_file": "POL-004-temporary-work-location-policy.md",
-    "snippet": "International work is normally limited to twenty business days.",
-    "content": "International work is normally limited to twenty business days.",
+    "snippet": (
+        "International work is normally limited to "
+        "twenty business days."
+    ),
+    "content": (
+        "International work is normally limited to "
+        "twenty business days."
+    ),
 }
 
 
@@ -55,7 +66,11 @@ def test_collects_tool_trace_and_citations():
             tool_call_id="call-1",
             content=json.dumps([POLICY_RESULT]),
         ),
-        AIMessage(content="See POL-004. The request is not approved."),
+        AIMessage(
+            content=(
+                "See POL-004. The request is not approved."
+            )
+        ),
     ]
 
     assert collect_tool_names(messages) == [
@@ -66,11 +81,35 @@ def test_collects_tool_trace_and_citations():
 
     assert len(trace) == 1
     assert trace[0]["tool"] == "policy_search_policies"
-    assert trace[0]["arguments"]["query"] == "six weeks abroad"
+    assert trace[0]["arguments"]["query"] == (
+        "six weeks abroad"
+    )
     assert "POL-004" in trace[0]["output_summary"]
 
     citations = collect_citations(messages)
 
     assert len(citations) == 1
     assert citations[0]["document_id"] == "POL-004"
-    assert citations[0]["snippet"].startswith("International work")
+    assert citations[0]["snippet"].startswith(
+        "International work"
+    )
+
+
+def test_selects_only_messages_from_latest_user_turn():
+    messages = [
+        HumanMessage(content="Old policy question"),
+        ToolMessage(
+            name="policy_search_policies",
+            tool_call_id="old-call",
+            content=json.dumps([POLICY_RESULT]),
+        ),
+        AIMessage(content="Old policy answer"),
+        HumanMessage(content="Current benefits question"),
+        AIMessage(content="Current benefits answer"),
+    ]
+
+    current_turn = messages_for_latest_turn(messages)
+
+    assert current_turn == messages[3:]
+    assert collect_citations(current_turn) == []
+    assert collect_tool_trace(current_turn) == []

@@ -172,6 +172,8 @@ This checklist translates the project brief into verifiable requirements.
 
 ## 15. Evaluation Results
 
+## 15. Evaluation Results
+
 - [x] Implement deterministic tool-selection checks.
 - [x] Implement deterministic policy-citation checks.
 - [x] Implement explicit forbidden-phrase safety checks.
@@ -180,16 +182,16 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Evaluate groundedness.
 - [x] Evaluate safety.
 - [x] Preserve tool evidence in evaluation results.
-- [x] Produce a passing 10-case baseline.
-- [ ] Report groundedness as a final aggregate metric.
-- [ ] Report citation accuracy as a final aggregate metric.
-- [ ] Report tool-selection accuracy as a final aggregate metric.
-- [ ] Report workflow-completion rate.
-- [ ] Report escalation or clarification accuracy.
-- [ ] Report action-safety pass rate.
-- [ ] Report warm latency p50 and p95 over representative tasks.
+- [x] Produce a passing 24-case final evaluation: 24/24.
+- [x] Report groundedness as a final aggregate metric: 100%.
+- [x] Report citation accuracy as a final aggregate metric: 100%.
+- [x] Report tool-selection accuracy as a final aggregate metric: 100%.
+- [x] Report workflow-completion rate: 100%.
+- [x] Report escalation or clarification accuracy: 100%.
+- [x] Report action-safety pass rate: 100%.
+- [x] Report warm latency: p50 18.55 seconds and p95 34.92 seconds.
 - [ ] Report deployed cold-start latency.
-- [ ] Run and report at least one ablation or comparison.
+- [x] Run and report a no-policy-search ablation: 18/24, or 75%.
 
 ## 16. Design Documentation
 

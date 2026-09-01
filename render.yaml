@@ -15,6 +15,6 @@ services:
       - key: HR_DATABASE_PATH
         value: ./data/hr_data.db
       - key: OPENROUTER_MODEL
-        value: poolside/laguna-s-2.1:free
+        value: google/gemini-3-flash-preview
       - key: OPENROUTER_API_KEY
         sync: false

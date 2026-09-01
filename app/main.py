@@ -15,7 +15,11 @@ from agent.safety import (
     MCP_UNAVAILABLE_MESSAGE,
     safe_error_message,
 )
-from agent.traces import collect_citations, collect_tool_trace
+from agent.traces import (
+    collect_citations,
+    collect_tool_trace,
+    messages_for_latest_turn,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -199,11 +203,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
         updated_conversation
     )
 
+    current_turn_messages = messages_for_latest_turn(
+        updated_conversation
+    )
     answer = str(updated_conversation[-1].content)
 
     return ChatResponse(
         session_id=session_id,
         answer=answer,
-        citations=collect_citations(updated_conversation),
-        tool_trace=collect_tool_trace(updated_conversation),
+        citations=collect_citations(current_turn_messages),
+        tool_trace=collect_tool_trace(current_turn_messages),
     )

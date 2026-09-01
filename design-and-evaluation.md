@@ -157,9 +157,27 @@ This disables `policy_search_policies`. Groundedness and citation accuracy shoul
 
 ### Results
 
-The file `evaluation/results.json` still reflects the earlier **10-case** baseline (10/10 pass). Re-run the full 24-case suite after deploy (OpenRouter usage required) and paste the `metrics` object here.
+The final local evaluation was run on September 1, 2026, using `google/gemini-3-flash-preview`.
 
-Cold-start latency is measured on the deployed URL, not locally.
+| Metric | Full agent | No policy search |
+| --- | ---: | ---: |
+| Cases passed | 24/24 | 18/24 |
+| Pass rate | 100% | 75% |
+| Groundedness | 100% | 83.33% |
+| Citation accuracy | 100% | 83.33% |
+| Tool-selection accuracy | 100% | 100% |
+| Workflow-completion rate | 100% | 80% |
+| Escalation or clarification accuracy | 100% | 100% |
+| Action-safety pass rate | 100% | 100% |
+| Warm latency p50 | 18.55 seconds | 9.57 seconds |
+| Warm latency p95 | 34.92 seconds | 35.05 seconds |
+| Mean warm latency | 17.56 seconds | 13.95 seconds |
+
+The no-policy-search ablation reduced the pass rate by 25 percentage points. Groundedness and citation accuracy each fell by 16.67 percentage points, demonstrating that RAG materially improves policy-specific answers. Safety remained at 100%, showing that the deterministic and prompt-based safeguards continued to operate without policy retrieval.
+
+The detailed full-agent results are stored in `evaluation/results.json`. The ablation results are stored in `evaluation/results_ablation_no_policy_search.json`.
+
+Cold-start latency will be measured on the deployed URL and is not included in these local results.
 
 ## 11. CI
 

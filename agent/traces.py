@@ -1,10 +1,21 @@
 import json
 
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 
 
 OUTPUT_SUMMARY_LIMIT = 280
 POLICY_SEARCH_TOOL = "policy_search_policies"
+
+
+def messages_for_latest_turn(messages) -> list:
+    """Return messages from the latest user turn onward."""
+    messages = list(messages)
+
+    for index in range(len(messages) - 1, -1, -1):
+        if isinstance(messages[index], HumanMessage):
+            return messages[index:]
+
+    return messages
 
 
 def message_to_text(content) -> str:

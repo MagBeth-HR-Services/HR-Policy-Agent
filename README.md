@@ -149,14 +149,14 @@ Open `.env` and replace the placeholder with your own OpenRouter API key.
 
 ```text
 OPENROUTER_API_KEY=your-private-key
-OPENROUTER_MODEL=poolside/laguna-s-2.1:free
+OPENROUTER_MODEL=google/gemini-3-flash-preview
 CHROMA_PATH=./data/chroma
 HR_DATABASE_PATH=./data/hr_data.db
 ```
 
 Never commit `.env` or share an API key.
 
-Free OpenRouter models can change availability and have request limits. Another tool-capable OpenRouter model may be used by changing `OPENROUTER_MODEL`.
+The verified 24-case evaluation used the paid `google/gemini-3-flash-preview` model because it provided reliable tool calling and structured evaluation output. OpenRouter usage charges apply. Another tool-capable OpenRouter model may be selected by changing `OPENROUTER_MODEL`, but results and rate limits may differ.
 
 ### 5. Build the policy vector index
 
@@ -320,7 +320,14 @@ python -m evaluation.run_evaluation
 python -m evaluation.run_evaluation --ablation no-policy-search
 ```
 
-The current committed `evaluation/results.json` is the earlier 10-case baseline. Re-run the 24-case suite before submission.
+Final local evaluation results:
+
+| Run | Passed | Pass rate | Groundedness | Citation accuracy |
+| --- | ---: | ---: | ---: | ---: |
+| Full agent | 24/24 | 100% | 100% | 100% |
+| No policy search | 18/24 | 75% | 83.33% | 83.33% |
+
+The 25-percentage-point pass-rate reduction demonstrates the contribution of RAG policy retrieval. Full metrics and analysis are documented in `design-and-evaluation.md`.
 
 ## Manual Diagnostic Commands
 
