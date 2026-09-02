@@ -98,3 +98,15 @@ def test_unexpected_errors_are_hidden():
 
     assert "Internal database" not in result
     assert "contact HR" in result
+
+
+def test_rate_limit_errors_are_explained():
+    error = RuntimeError(
+        "Error code: 429 - google/gemma-4-26b-a4b-it:free "
+        "is temporarily rate-limited upstream."
+    )
+
+    result = safe_error_message(error)
+
+    assert "rate-limited" in result
+    assert "google/gemma" not in result

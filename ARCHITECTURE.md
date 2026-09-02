@@ -122,24 +122,45 @@ Returns:
 ```json
 {
   "session_id": "conversation-session-id",
-  "answer": "Agent response"
+  "answer": "Agent response",
+  "citations": [
+    {
+      "document_id": "POL-004",
+      "title": "Temporary Work Location Policy",
+      "section": "4. Policy Requirements",
+      "page_number": 0,
+      "source_file": "POL-004-temporary-work-location-policy.md",
+      "snippet": "International work is normally limited to twenty business days."
+    }
+  ],
+  "tool_trace": [
+    {
+      "tool": "policy_search_policies",
+      "arguments": {"query": "six weeks abroad"},
+      "output_summary": "..."
+    }
+  ]
 }
 ```
 
 The application stores conversation state in process memory using the session ID.
 
-Policy citations currently appear inside the agent’s answer text.
-
 #### `GET /health`
 
-Currently returns:
+Returns application status and MCP connectivity:
 
 ```json
 {
   "status": "healthy",
-  "application": "Horizon HR Policy Agent"
+  "application": "Horizon HR Policy Agent",
+  "mcp": {
+    "policy": "connected",
+    "hr": "connected"
+  }
 }
 ```
+
+Values for each MCP server are `connected`, `not_connected`, or `unavailable`.
 
 ### Application lifespan
 
@@ -154,13 +175,7 @@ Conversation state is cleared when the application stops.
 
 ### Pending API improvements
 
-Before final deployment, the API and interface still need to provide or display:
-
-- Structured policy citations
-- Supporting snippets
-- Concise operational tool traces
-- MCP connectivity information in the health response where feasible
-- Clear confirmation and escalation state where useful
+Live Render verification of both demo workflows is still required. Structured citations, snippets, tool traces, and MCP health status are implemented.
 
 ## 5. Browser Interface
 
@@ -172,9 +187,9 @@ It currently:
 - Sends them to `POST /api/chat`
 - Preserves the returned session ID
 - Displays the final agent answer
-- Shows policy citations when the agent includes them in the answer
-
-A clearer display for structured citations, supporting snippets, and concise MCP tool traces remains pending.
+- Displays structured citations and snippets
+- Displays a concise MCP tool-call trace
+- Shows application and MCP health status
 
 ## 6. LangGraph Agent
 
@@ -467,17 +482,18 @@ Unexpected internal errors are replaced with a generic safe response.
 
 ## 15. Testing and Evaluation
 
-The automated test suite currently contains 40 passing tests covering:
+The automated test suite covers:
 
 - Policy loading
 - Citation metadata
 - Chunking
-- Retrieval
+- Retrieval (top-k, filter, diversify)
 - Database creation and services
 - Employee-ID validation
 - Confirmation logic
 - Agent behavior
-- FastAPI import and endpoints
+- FastAPI import and endpoints, including citations and tool traces
+- MCP tool registration and an HR MCP stdio tool call
 
 GitHub Actions successfully runs the project on a clean Linux runner.
 
@@ -488,15 +504,13 @@ The current evaluation system combines:
 - Explicit forbidden-phrase checks
 - An LLM judge for correctness, grounding, safety, and semantic criteria
 
-The existing 10-case baseline passes all cases.
+The evaluation dataset contains 24 cases with gold answers. Aggregate metrics and a no-policy-search ablation are implemented in the runner. A full OpenRouter run of the expanded set is still required, along with deployed cold-start measurement.
 
 Still required:
 
-- Expand to 20–30 cases
-- Report required behavior metrics
-- Add warm latency p50 and p95
+- Record live evaluation metrics for all 24 cases
 - Measure deployed cold-start latency
-- Run an ablation or comparison
+- Complete Render Standard deployment
 
 ## 16. Current Local Runtime
 
@@ -546,10 +560,7 @@ The current architecture has these known limitations:
 
 - Conversation state exists only in application memory.
 - Conversation history is lost when the application restarts.
-- SQLite ticket changes are local and non-durable on free deployment.
+- SQLite ticket changes are local and non-durable across deploys.
 - Chroma and the embedding model increase build and startup resource use.
-- The API does not yet return separate structured citations or tool traces.
-- The UI does not yet show a dedicated operational trace.
-- `/health` does not yet test MCP connectivity.
-- The evaluation dataset contains 10 rather than 20–30 cases.
+- The expanded evaluation suite has not yet been re-run end-to-end against OpenRouter.
 - Deployment has not yet been completed.

@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from logging import getLogger
 from pathlib import Path
 from uuid import uuid4
 
@@ -8,11 +9,21 @@ from fastapi.templating import Jinja2Templates
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
-from agent.graph import create_hr_agent
-from agent.safety import safe_error_message
+from agent.graph import build_hr_agent
+from agent.mcp_client import load_agent_tools
+from agent.safety import (
+    MCP_UNAVAILABLE_MESSAGE,
+    safe_error_message,
+)
+from agent.traces import (
+    collect_citations,
+    collect_tool_trace,
+    messages_for_latest_turn,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+logger = getLogger("horizon.hr_agent")
 
 templates = Jinja2Templates(
     directory=str(PROJECT_ROOT / "app" / "templates")
@@ -29,22 +40,52 @@ class ChatRequest(BaseModel):
     session_id: str | None = None
 
 
+class Citation(BaseModel):
+    """A policy snippet returned to the client."""
+
+    document_id: str
+    title: str = ""
+    section: str = ""
+    page_number: int = 0
+    source_file: str = ""
+    snippet: str = ""
+
+
+class ToolTraceItem(BaseModel):
+    """One MCP tool call shown in the operational trace."""
+
+    tool: str
+    arguments: dict = Field(default_factory=dict)
+    output_summary: str = ""
+
+
 class ChatResponse(BaseModel):
     """Data returned by the chat endpoint."""
 
     session_id: str
     answer: str
+    citations: list[Citation] = Field(default_factory=list)
+    tool_trace: list[ToolTraceItem] = Field(
+        default_factory=list
+    )
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Create the agent once when the web application starts."""
-    application.state.agent = await create_hr_agent()
+    tools = await load_agent_tools()
+    application.state.agent = build_hr_agent(tools)
+    application.state.mcp_tools = {
+        tool.name: tool
+        for tool in tools
+    }
     application.state.conversations = {}
 
     yield
 
     application.state.conversations.clear()
+    application.state.mcp_tools = {}
+    application.state.agent = None
 
 
 app = FastAPI(
@@ -57,6 +98,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.agent = None
+app.state.conversations = {}
+app.state.mcp_tools = {}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -68,12 +113,52 @@ async def home(request: Request):
     )
 
 
+async def mcp_connectivity_status() -> dict[str, str]:
+    """Call MCP health tools when they were discovered at startup."""
+    status = {
+        "policy": "not_connected",
+        "hr": "not_connected",
+    }
+    mcp_tools = getattr(app.state, "mcp_tools", {}) or {}
+    health_tools = {
+        "policy": "policy_health_check",
+        "hr": "hr_health_check",
+    }
+
+    for key, tool_name in health_tools.items():
+        tool = mcp_tools.get(tool_name)
+
+        if tool is None:
+            continue
+
+        try:
+            await tool.ainvoke({})
+            status[key] = "connected"
+        except Exception:
+            status[key] = "unavailable"
+
+    return status
+
+
 @app.get("/health")
 async def health_check() -> dict:
-    """Return the web application's health status."""
+    """Return application and MCP connectivity status."""
+    mcp = await mcp_connectivity_status()
+    agent_ready = getattr(app.state, "agent", None) is not None
+    mcp_connected = all(
+        value == "connected"
+        for value in mcp.values()
+    )
+
+    if agent_ready and not mcp_connected:
+        status = "degraded"
+    else:
+        status = "healthy"
+
     return {
-        "status": "healthy",
+        "status": status,
         "application": "Horizon HR Policy Agent",
+        "mcp": mcp,
     }
 
 
@@ -81,6 +166,15 @@ async def health_check() -> dict:
 async def chat(request: ChatRequest) -> ChatResponse:
     """Send a user message through the HR agent."""
     session_id = request.session_id or str(uuid4())
+    agent = getattr(app.state, "agent", None)
+
+    if agent is None:
+        return ChatResponse(
+            session_id=session_id,
+            answer=MCP_UNAVAILABLE_MESSAGE,
+            citations=[],
+            tool_trace=[],
+        )
 
     conversation = app.state.conversations.setdefault(
         session_id,
@@ -92,11 +186,12 @@ async def chat(request: ChatRequest) -> ChatResponse:
     )
 
     try:
-        result = await app.state.agent.ainvoke(
+        result = await agent.ainvoke(
             {"messages": conversation}
         )
     except Exception as error:
         conversation.pop()
+        logger.exception("Chat agent invocation failed.")
 
         raise HTTPException(
             status_code=500,
@@ -108,9 +203,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
         updated_conversation
     )
 
+    current_turn_messages = messages_for_latest_turn(
+        updated_conversation
+    )
     answer = str(updated_conversation[-1].content)
 
     return ChatResponse(
         session_id=session_id,
         answer=answer,
+        citations=collect_citations(current_turn_messages),
+        tool_trace=collect_tool_trace(current_turn_messages),
     )

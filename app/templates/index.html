@@ -37,8 +37,41 @@
         }
 
         header p {
-            margin: 0;
+            margin: 0 0 8px 0;
             color: #5f6b7a;
+        }
+
+        #health-status {
+            font-size: 13px;
+            color: #5f6b7a;
+        }
+
+        .citations,
+        .trace {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #d5deea;
+            font-size: 13px;
+        }
+
+        .citations h2,
+        .trace h2 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #3d4f66;
+        }
+
+        .citations li,
+        .trace li {
+            margin-bottom: 8px;
+        }
+
+        .snippet {
+            display: block;
+            margin-top: 4px;
+            color: #4b5563;
         }
 
         .chat-panel {
@@ -133,6 +166,7 @@
                 Ask about company policies, PTO, benefits,
                 remote work, or HR support.
             </p>
+            <p id="health-status">Checking MCP status...</p>
         </header>
 
         <section class="chat-panel">
@@ -182,6 +216,72 @@
             messages.scrollTop = messages.scrollHeight;
         }
 
+        function addListSection(parent, title, items) {
+            if (!items || !items.length) {
+                return;
+            }
+
+            const section = document.createElement("div");
+            section.className = title === "Citations" ? "citations" : "trace";
+
+            const heading = document.createElement("h2");
+            heading.textContent = title;
+            section.appendChild(heading);
+
+            const list = document.createElement("ol");
+
+            items.forEach((item) => {
+                const row = document.createElement("li");
+                row.textContent = item;
+                list.appendChild(row);
+            });
+
+            section.appendChild(list);
+            parent.appendChild(section);
+        }
+
+        function addAssistantResponse(data) {
+            const message = document.createElement("div");
+            message.className = "message assistant";
+
+            const answer = document.createElement("div");
+            answer.textContent = data.answer || "";
+            message.appendChild(answer);
+
+            const citationLines = (data.citations || []).map((citation) => {
+                const page = citation.page_number
+                    ? `, page ${citation.page_number}`
+                    : "";
+                const snippet = citation.snippet
+                    ? ` ${citation.snippet}`
+                    : "";
+                return `${citation.document_id} — ${citation.title} (${citation.section}${page}).${snippet}`;
+            });
+
+            const traceLines = (data.tool_trace || []).map((item) => {
+                const args = JSON.stringify(item.arguments || {});
+                return `${item.tool} ${args} → ${item.output_summary || ""}`;
+            });
+
+            addListSection(message, "Citations", citationLines);
+            addListSection(message, "Tool trace", traceLines);
+
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        fetch("/health")
+            .then((response) => response.json())
+            .then((data) => {
+                const mcp = data.mcp || {};
+                document.getElementById("health-status").textContent =
+                    `App ${data.status}. Policy MCP: ${mcp.policy || "unknown"}. HR MCP: ${mcp.hr || "unknown"}.`;
+            })
+            .catch(() => {
+                document.getElementById("health-status").textContent =
+                    "Health check unavailable.";
+            });
+
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
 
@@ -217,7 +317,7 @@
                 }
 
                 sessionId = data.session_id;
-                addMessage(data.answer, "assistant");
+                addAssistantResponse(data);
                 status.textContent = "";
             } catch (error) {
                 addMessage(
