@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from logging import getLogger
 from pathlib import Path
@@ -70,22 +71,48 @@ class ChatResponse(BaseModel):
     )
 
 
+async def start_agent(application: FastAPI) -> None:
+    """Load MCP tools and the agent after the HTTP server is accepting requests."""
+    try:
+        tools = await load_agent_tools()
+        application.state.mcp_tools = {
+            tool.name: tool
+            for tool in tools
+        }
+        application.state.agent = build_hr_agent(tools)
+    except Exception:
+        logger.exception("Failed to initialize the MCP agent.")
+        application.state.agent = None
+        application.state.mcp_tools = {}
+
+
 @asynccontextmanager
 async def lifespan(application: FastAPI):
-    """Create the agent once when the web application starts."""
-    tools = await load_agent_tools()
-    application.state.agent = build_hr_agent(tools)
-    application.state.mcp_tools = {
-        tool.name: tool
-        for tool in tools
-    }
+    """Accept HTTP traffic immediately, then start MCP in the background.
+
+    Render's deploy health check hits /health with a short timeout. Loading
+    MiniLM inside the policy MCP process can exceed that window if it blocks
+    startup.
+    """
+    application.state.agent = None
+    application.state.mcp_tools = {}
     application.state.conversations = {}
+    init_task = asyncio.create_task(start_agent(application))
+    application.state.mcp_init_task = init_task
 
     yield
+
+    if not init_task.done():
+        init_task.cancel()
+        try:
+            await init_task
+        except asyncio.CancelledError:
+            pass
 
     application.state.conversations.clear()
     application.state.mcp_tools = {}
     application.state.agent = None
+    application.state.mcp_init_task = None
 
 
 app = FastAPI(
@@ -101,6 +128,7 @@ app = FastAPI(
 app.state.agent = None
 app.state.conversations = {}
 app.state.mcp_tools = {}
+app.state.mcp_init_task = None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -113,37 +141,31 @@ async def home(request: Request):
     )
 
 
-async def mcp_connectivity_status() -> dict[str, str]:
-    """Call MCP health tools when they were discovered at startup."""
-    status = {
-        "policy": "not_connected",
-        "hr": "not_connected",
-    }
+def mcp_connectivity_status() -> dict[str, str]:
+    """Report MCP status from tools discovered at startup.
+
+    Do not call MCP tools here. Render's health check would wait on MiniLM.
+    """
     mcp_tools = getattr(app.state, "mcp_tools", {}) or {}
     health_tools = {
         "policy": "policy_health_check",
         "hr": "hr_health_check",
     }
 
-    for key, tool_name in health_tools.items():
-        tool = mcp_tools.get(tool_name)
-
-        if tool is None:
-            continue
-
-        try:
-            await tool.ainvoke({})
-            status[key] = "connected"
-        except Exception:
-            status[key] = "unavailable"
-
-    return status
+    return {
+        key: (
+            "connected"
+            if tool_name in mcp_tools
+            else "not_connected"
+        )
+        for key, tool_name in health_tools.items()
+    }
 
 
 @app.get("/health")
 async def health_check() -> dict:
-    """Return application and MCP connectivity status."""
-    mcp = await mcp_connectivity_status()
+    """Return a fast liveness response for Render and the chat UI."""
+    mcp = mcp_connectivity_status()
     agent_ready = getattr(app.state, "agent", None) is not None
     mcp_connected = all(
         value == "connected"
