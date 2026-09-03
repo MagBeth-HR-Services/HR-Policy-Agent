@@ -13,7 +13,7 @@ The Horizon HR Policy Agent combines:
 - Policy retrieval through Chroma
 - Synthetic HR data stored in SQLite
 
-The architecture currently runs locally and through GitHub Actions. Single-service deployment to Render remains planned.
+The architecture runs locally, in GitHub Actions, and as one Render web service: [https://horizon-hr-policy-agent.onrender.com/](https://horizon-hr-policy-agent.onrender.com/).
 
 ## 2. Current Technology Stack
 
@@ -34,7 +34,7 @@ The architecture currently runs locally and through GitHub Actions. Single-servi
 | MCP transport | `stdio` | Implemented |
 | Testing | Pytest | Implemented |
 | Continuous integration | GitHub Actions | Implemented |
-| Deployment target | Render | Planned |
+| Deployment target | Render Standard 2 GB | Deployed |
 
 Exact package versions are pinned in `requirements.txt`.
 
@@ -160,22 +160,20 @@ Returns application status and MCP connectivity:
 }
 ```
 
-Values for each MCP server are `connected`, `not_connected`, or `unavailable`.
+Values for each MCP server are `connected` or `not_connected`. `/health` reports discovered tools only; it does not call MCP. That keeps Render's deploy health check fast while MiniLM still loads.
 
 ### Application lifespan
 
 When FastAPI starts, it:
 
-1. Creates the LangGraph agent.
-2. Discovers MCP tools through the multi-server client.
-3. Stores the agent in application state.
+1. Accepts HTTP traffic immediately so `/health` can return 200.
+2. Loads MCP tools and the LangGraph agent in a background task.
+3. Stores the agent in application state when that task finishes.
 4. Creates an in-memory conversation dictionary.
 
-Conversation state is cleared when the application stops.
+Chat returns a safe unavailable message until the agent is ready. Conversation state is cleared when the application stops.
 
-### Pending API improvements
-
-Live Render verification of both demo workflows is still required. Structured citations, snippets, tool traces, and MCP health status are implemented.
+Both demonstration workflows were verified on the live Render URL, including citations and tool traces.
 
 ## 5. Browser Interface
 
@@ -504,13 +502,7 @@ The current evaluation system combines:
 - Explicit forbidden-phrase checks
 - An LLM judge for correctness, grounding, safety, and semantic criteria
 
-The evaluation dataset contains 24 cases with gold answers. Aggregate metrics and a no-policy-search ablation are implemented in the runner. A full OpenRouter run of the expanded set is still required, along with deployed cold-start measurement.
-
-Still required:
-
-- Record live evaluation metrics for all 24 cases
-- Measure deployed cold-start latency
-- Complete Render Standard deployment
+The evaluation dataset contains 24 cases with gold answers. The full-agent OpenRouter run passed 24/24. The no-policy-search ablation passed 18/24. Deployed first-chat latency was 17.65 seconds. Metrics are in `design-and-evaluation.md`.
 
 ## 16. Current Local Runtime
 
@@ -528,9 +520,9 @@ python -m uvicorn app.main:app --reload
 
 FastAPI starts both MCP servers as local child processes when it creates the agent.
 
-## 17. Planned Deployment Architecture
+## 17. Deployment Architecture
 
-The planned Render deployment will use one web service containing:
+The live deployment is one Render Standard (2 GB) web service containing:
 
 - FastAPI
 - LangGraph
@@ -541,18 +533,19 @@ The planned Render deployment will use one web service containing:
 - Policy documents
 - Synthetic source data
 
-The deployment build process is expected to:
+Application: https://horizon-hr-policy-agent.onrender.com/  
+Health: https://horizon-hr-policy-agent.onrender.com/health
 
-1. Install dependencies.
-2. Build the Chroma policy index.
-3. Seed the SQLite database.
-4. Start the FastAPI application with Uvicorn.
+The deployment build process:
 
-Render environment variables will supply the API key, model name, and data paths.
+1. Installs dependencies.
+2. Builds the Chroma policy index.
+3. Seeds the SQLite database.
+4. Starts the FastAPI application with Uvicorn.
 
-Because Render’s free filesystem is temporary, Chroma and SQLite will be recreated during deployment. Mock ticket changes will not be durable across restarts on the free service.
+Render environment variables supply the API key, model name, and data paths. Auto-deploy is off.
 
-The final build command, start command, health URL, cold-start behavior, and persistence limitations will be documented after deployment testing.
+Chroma and SQLite are recreated on each deploy. Mock ticket changes do not survive a rebuild. First chat after a deploy measured 17.65 seconds while MiniLM loaded in the policy MCP process. Build commands, URLs, and cold-start notes are in `deployed.md`.
 
 ## 18. Known Limitations and Pending Enhancements
 
@@ -562,5 +555,5 @@ The current architecture has these known limitations:
 - Conversation history is lost when the application restarts.
 - SQLite ticket changes are local and non-durable across deploys.
 - Chroma and the embedding model increase build and startup resource use.
-- The expanded evaluation suite has not yet been re-run end-to-end against OpenRouter.
-- Deployment has not yet been completed.
+- First chat after a deploy is slower than later chats because MiniLM loads in the policy MCP process.
+- Remaining submission work is the demonstration video, inviting `quantic-grader`, and one group submission.

@@ -237,8 +237,8 @@ This checklist translates the project brief into verifiable requirements.
 
 ## 19. Final Repository Audit
 
-- [ ] Verify the repository contains no API keys, credentials, private data, or unnecessary environment files.
-- [ ] Verify a new contributor can follow the README and run the application.
+- [x] Verify the repository contains no API keys, credentials, private data, or unnecessary environment files.
+- [x] Verify a new contributor can follow the README and run the application.
 - [x] Verify CI passes from a clean checkout.
 - [x] Verify all required files and folders are present.
 - [x] Verify citations, snippets, and tool traces are readable in the deployed UI.
@@ -248,7 +248,7 @@ This checklist translates the project brief into verifiable requirements.
 ## 20. Submission
 
 - [ ] Share the GitHub repository with the `quantic-grader` account.
-- [ ] Add the deployed application URL to `README.md`.
+- [x] Add the deployed application URL to `README.md`.
 - [x] Create the GitHub repository.
 - [ ] Prepare the final GitHub repository link for submission.
 - [ ] Prepare the recorded presentation link.

@@ -26,7 +26,7 @@ The application currently runs locally and includes:
 - Unit and smoke tests, including retrieval and MCP discovery
 - A 24-case evaluation runner with gold answers, aggregate metrics, and an ablation flag
 - GitHub Actions continuous integration
-- Drafts of `design-and-evaluation.md`, `ai-tooling.md`, and `deployed.md`
+- `design-and-evaluation.md`, `ai-tooling.md`, and `deployed.md` with the live URL and evaluation results
 
 Live application: [https://horizon-hr-policy-agent.onrender.com/](https://horizon-hr-policy-agent.onrender.com/)  
 Health: [https://horizon-hr-policy-agent.onrender.com/health](https://horizon-hr-policy-agent.onrender.com/health)
@@ -104,7 +104,7 @@ The `data/` directory is generated locally and is not committed to Git.
 ### 1. Clone the repository
 
 ```cmd
-git clone https://github.com/mcutler1973-hue/HR-Policy-Agent.git
+git clone https://github.com/MagBeth-HR-Services/HR-Policy-Agent.git
 cd HR-Policy-Agent
 ```
 

@@ -1,24 +1,22 @@
 # How to Finish the Horizon HR Policy Agent
 
-## Status after the 28 August 2026 implementation pass
+## Status after the 3 September 2026 Render deploy
 
-Done in the repository (still needs your Render click, a 24-case OpenRouter eval run, and the video):
+Done:
 
 - `/api/chat` returns `answer`, `citations`, `snippets` (on each citation), and `tool_trace`
 - Chat UI shows citations and the tool trace; header shows `/health` MCP status
-- Graceful chat message when the agent/MCP stack is not started
-- Retrieval tests, MCP registration tests, HR MCP stdio list+call test (runs in GitHub Actions via pytest)
-- 24 evaluation cases with gold answers, including multi-document and out-of-scope
-- Runner aggregates, latency, and `--ablation no-policy-search`
-- Corpus size documented at about 46 pages
-- `render.yaml`, `.python-version`, `design-and-evaluation.md`, `ai-tooling.md`, `deployed.md`
+- Live app: https://horizon-hr-policy-agent.onrender.com/
+- Health: https://horizon-hr-policy-agent.onrender.com/health
+- Both demonstration workflows verified on the live URL
+- 24/24 full evaluation and 18/24 no-policy-search ablation
+- First-chat latency after deploy: 17.65 seconds
+- `design-and-evaluation.md`, `ai-tooling.md`, and `deployed.md` include the live URL
 
-Not done (people / live services):
+Not done (people / submission):
 
-- Create the Render Standard service and paste `OPENROUTER_API_KEY`
-- Re-run `python -m evaluation.run_evaluation` and the ablation; paste metrics into `design-and-evaluation.md`
-- Confirm both demo prompts on the live URL
-- Video, IDs, `quantic-grader`, one submitter
+- Video, IDs, invite `quantic-grader`, one submitter
+- Suspend the Render service after grading
 
 The rest of this file is the original plan mapped to the official brief.
 

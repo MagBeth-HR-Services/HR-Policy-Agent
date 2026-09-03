@@ -208,19 +208,8 @@ These exclusions keep the project safe, explainable, and compatible with modest 
 
 The following items remain within the project scope but are not yet complete:
 
-- Expand the evaluation dataset from 10 to 20–30 cases
-- Add required evaluation metrics
-- Measure warm latency p50 and p95
-- Measure deployed cold-start behavior
-- Run and report an ablation or comparison
-- Return or display concise operational tool traces in the web interface
-- Finish `design-and-evaluation.md`
-- Finish `ai-tooling.md`
-- Create `deployed.md`
-- Configure and verify Render deployment
-- Test both demonstration workflows after deployment
-- Complete the final security and repository audit
 - Record the required demonstration video
+- Invite `quantic-grader` and submit the GitHub and presentation links
 
 ## 10. Definition of Scope Completion
 

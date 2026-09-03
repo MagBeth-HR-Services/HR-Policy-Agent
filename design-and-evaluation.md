@@ -179,7 +179,7 @@ The no-policy-search ablation reduced the pass rate by 25 percentage points. Gro
 
 The detailed full-agent results are stored in `evaluation/results.json`. The ablation results are stored in `evaluation/results_ablation_no_policy_search.json`.
 
-Cold-start latency will be measured on the deployed URL and is not included in these local results.
+Deployed first-chat latency after the live Render deploy was 17.65 seconds. That measurement is separate from the local warm-latency figures above. See `deployed.md`.
 
 ## 11. CI
 
