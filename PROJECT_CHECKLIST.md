@@ -71,7 +71,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Combine structured tool results and policy evidence into grounded responses.
 - [x] Continue the model-tools-model loop until a final response is available.
 - [x] Avoid exposing hidden chain-of-thought.
-- [ ] Verify both selected multi-step demonstration workflows end-to-end.
+- [x] Verify both selected multi-step demonstration workflows end-to-end.
 - [x] Produce a concise user-visible operational trace containing selected tools, arguments, outputs, sources, response basis, and escalation decisions.
 
 ## 8. MCP Servers and Tools
@@ -115,7 +115,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Return structured citations and snippets separately from the answer.
 - [x] Return and display a concise MCP tool-call trace.
 - [x] Include MCP connectivity status in the health response where feasible.
-- [ ] Verify both demonstration workflows through the final deployed interface.
+- [x] Verify both demonstration workflows through the final deployed interface.
 
 ## 11. Automated Testing
 
@@ -145,15 +145,15 @@ This checklist translates the project brief into verifiable requirements.
 
 ## 13. Deployment
 
-- [ ] Deploy the application to Render or an equivalent host.
-- [ ] Provide a shareable deployed application URL.
-- [ ] Configure deployed secrets using environment variables.
-- [ ] Build Chroma during deployment.
-- [ ] Seed SQLite during deployment.
+- [x] Deploy the application to Render or an equivalent host.
+- [x] Provide a shareable deployed application URL.
+- [x] Configure deployed secrets using environment variables.
+- [x] Build Chroma during deployment.
+- [x] Seed SQLite during deployment.
 - [x] Avoid requiring a paid database.
-- [ ] Verify both agentic workflows in the deployed application.
+- [x] Verify both agentic workflows in the deployed application.
 - [x] Document expected free-tier cold-start behavior.
-- [ ] Record the deployed application and health URLs in `deployed.md`.
+- [x] Record the deployed application and health URLs in `deployed.md`.
 
 ## 14. Evaluation Dataset
 
@@ -190,7 +190,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Report escalation or clarification accuracy: 100%.
 - [x] Report action-safety pass rate: 100%.
 - [x] Report warm latency: p50 18.55 seconds and p95 34.92 seconds.
-- [ ] Report deployed cold-start latency.
+- [x] Report deployed cold-start latency: 17.65 seconds.
 - [x] Run and report a no-policy-search ablation: 18/24, or 75%.
 
 ## 16. Design Documentation
@@ -241,7 +241,7 @@ This checklist translates the project brief into verifiable requirements.
 - [ ] Verify a new contributor can follow the README and run the application.
 - [x] Verify CI passes from a clean checkout.
 - [x] Verify all required files and folders are present.
-- [ ] Verify citations, snippets, and tool traces are readable in the deployed UI.
+- [x] Verify citations, snippets, and tool traces are readable in the deployed UI.
 - [ ] Verify both demonstration workflows immediately before recording.
 - [ ] Review this entire checklist against the final implementation.
 

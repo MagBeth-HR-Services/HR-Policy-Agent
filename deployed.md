@@ -1,6 +1,6 @@
 # Deployed application
 
-The Horizon HR Policy Agent is not yet on a public host.
+The Horizon HR Policy Agent is deployed on Render.
 
 Intended deployment (do not change the architecture):
 
@@ -13,8 +13,8 @@ Intended deployment (do not change the architecture):
 
 | Item | Value |
 | --- | --- |
-| Application | *add after deploy, for example `https://horizon-hr-policy-agent.onrender.com/`* |
-| Health | *add `/health` on the same host* |
+| Application | https://horizon-hr-policy-agent.onrender.com/ |
+| Health | https://horizon-hr-policy-agent.onrender.com/health |
 | Chat API | `POST /api/chat` |
 
 ## Build and start
@@ -47,7 +47,7 @@ Set in the Render dashboard. Do not commit secrets.
 
 Paid Standard instances do not spin down the way Render Free does.
 
-After a deploy, the first request still loads MiniLM inside the policy MCP process. Time that request and replace this paragraph with the measured seconds.
+Measured first-chat latency after the live deploy: **17.65 seconds** (`What is PTO?`). Most of that wait is MiniLM loading inside the policy MCP process on the first request after a deploy.
 
 If the service is ever moved to Free, document spin-down (often about one minute) here.
 

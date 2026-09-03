@@ -1,6 +1,6 @@
 # Horizon HR Policy Agent
 
-[![Continuous Integration](https://github.com/mcutler1973-hue/HR-Policy-Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/mcutler1973-hue/HR-Policy-Agent/actions/workflows/ci.yml)
+[![Continuous Integration](https://github.com/MagBeth-HR-Services/HR-Policy-Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/MagBeth-HR-Services/HR-Policy-Agent/actions/workflows/ci.yml)
 
 An agentic HR assistant for the fictional company Horizon Technologies.
 
@@ -28,7 +28,8 @@ The application currently runs locally and includes:
 - GitHub Actions continuous integration
 - Drafts of `design-and-evaluation.md`, `ai-tooling.md`, and `deployed.md`
 
-A shareable Render URL is still required before the demonstration video.
+Live application: [https://horizon-hr-policy-agent.onrender.com/](https://horizon-hr-policy-agent.onrender.com/)  
+Health: [https://horizon-hr-policy-agent.onrender.com/health](https://horizon-hr-policy-agent.onrender.com/health)
 
 ## Main Technologies
 
@@ -412,7 +413,7 @@ Chroma and SQLite are recreated from the committed fictional source data.
 
 ## Deployment
 
-Deployment to Render is prepared but the live URL is not up yet.
+The application is live at [https://horizon-hr-policy-agent.onrender.com/](https://horizon-hr-policy-agent.onrender.com/). Health is [https://horizon-hr-policy-agent.onrender.com/health](https://horizon-hr-policy-agent.onrender.com/health). First-chat latency after deploy was 17.65 seconds. Details are in `deployed.md`.
 
 Recommended host: **one Render web service on Standard (2 GB RAM)**. Free and Starter (512 MB) are too small for local MiniLM plus two MCP processes. This keeps the assignment's single-service architecture. Do not add a paid database.
 
@@ -432,8 +433,6 @@ Set `OPENROUTER_API_KEY` in the Render dashboard. Other variables are listed in 
 
 `render.yaml` has `autoDeploy: false` so you deploy only after GitHub Actions is green.
 
-After the service exists, put the public URL in `README.md` and `deployed.md`. Time the first request after deploy and record it as cold-start latency.
-
 Blueprint file: `render.yaml`. Python pin: `.python-version`.
 
 ## Project Documentation
@@ -444,7 +443,7 @@ Blueprint file: `render.yaml`. Python pin: `.python-version`.
 - `evaluation/` — evaluation cases, runner, and results
 - `mock_data/DATA_SCHEMA.md` — synthetic data schema
 
-The following final submission documents are in the repository. Fill in the live URL after Render deploy, and replace evaluation metrics after a 24-case OpenRouter run:
+The following final submission documents are in the repository:
 
 - `design-and-evaluation.md`
 - `ai-tooling.md`

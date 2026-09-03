@@ -120,7 +120,9 @@ Expected tools:
 - Auto-deploy is off in `render.yaml` so a deploy follows a green GitHub Actions run
 - Secrets: environment variables only
 
-See `deployed.md` for the live URL once it exists.
+Live URL: https://horizon-hr-policy-agent.onrender.com/  
+Health: https://horizon-hr-policy-agent.onrender.com/health  
+Measured first-chat latency after deploy: 17.65 seconds. See `deployed.md`.
 
 ## 10. Evaluation
 
