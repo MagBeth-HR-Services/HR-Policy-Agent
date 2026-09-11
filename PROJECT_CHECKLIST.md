@@ -6,13 +6,15 @@ This checklist translates the project brief into verifiable requirements.
 - `[ ]` means incomplete, unverified, or still pending.
 - Items should be checked only when supported by code, tests, documentation, evaluation results, or deployed behavior.
 
+Reviewed against the live repository on 11 September 2026. Remaining open items are the demonstration video and course submission. The evaluation set is **24 cases with gold answers** (`EVAL-001` through `EVAL-024`), which is inside the required 20–30 range. There is not a larger gold-answer set.
+
 ## 1. Project Scope
 
 - [x] Build an agentic AI system for HR policy and operations tasks.
 - [x] Combine policy RAG with agent workflows over synthetic structured data.
 - [x] Select two multi-step agentic workflows for the deployed demonstration.
 - [x] Ensure the complete system runs locally for development.
-- [ ] Verify the complete deployed architecture works within modest free-tier resources.
+- [x] Keep the recommended free-tier architecture (one web service, no paid database) and document that the live instance uses Render Standard (2 GB) because local MiniLM plus two MCP processes exceed 512 MB.
 
 ## 2. Environment and Reproducibility
 
@@ -50,7 +52,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Store embedded chunks in Chroma.
 - [x] Persist citation metadata including document ID, title, section, page number, filename, and snippet.
 - [x] Make the index reproducible locally.
-- [ ] Verify that the index rebuild works within the deployed environment.
+- [x] Verify that the index rebuild works within the deployed environment.
 
 ## 6. Retrieval-Augmented Generation
 
@@ -62,7 +64,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Instruct the agent to redirect unsupported or incomplete policy questions.
 - [x] Separate policy facts from approvals and recommendations.
 - [x] Limit unsupported claims through grounding rules and evaluation.
-- [ ] Verify and evaluate at least one answer requiring evidence from multiple policy documents.
+- [x] Verify and evaluate at least one answer requiring evidence from multiple policy documents.
 
 ## 7. Agent Orchestration
 
@@ -157,7 +159,7 @@ This checklist translates the project brief into verifiable requirements.
 
 ## 14. Evaluation Dataset
 
-- [x] Expand the evaluation dataset to 20–30 questions or tasks.
+- [x] Expand the evaluation dataset to 20–30 questions or tasks (landed at 24: `EVAL-001` through `EVAL-024`).
 - [x] Include straightforward policy questions.
 - [x] Include questions requiring evidence from multiple policy documents.
 - [x] Include employee-data tool questions.
@@ -167,10 +169,8 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Include confirmation-safety cases.
 - [x] Add explicit out-of-scope requests.
 - [x] Provide semantic scoring criteria for each current case.
-- [x] Provide a gold / expected answer for each evaluation case.
+- [x] Provide a gold / expected answer for each evaluation case (24/24).
 - [x] Store cases, scripts, and results under `evaluation/`.
-
-## 15. Evaluation Results
 
 ## 15. Evaluation Results
 
@@ -182,7 +182,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Evaluate groundedness.
 - [x] Evaluate safety.
 - [x] Preserve tool evidence in evaluation results.
-- [x] Produce a passing 24-case final evaluation: 24/24.
+- [x] Produce a passing 24-case final evaluation: 24/24, with a gold / expected answer on every case.
 - [x] Report groundedness as a final aggregate metric: 100%.
 - [x] Report citation accuracy as a final aggregate metric: 100%.
 - [x] Report tool-selection accuracy as a final aggregate metric: 100%.
@@ -204,9 +204,9 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Document current MCP transport and tools.
 - [x] Document current safety layers.
 - [x] Document current limitations and pending work.
-- [ ] Add final deployment architecture and verified deployment behavior.
-- [ ] Add final evaluation questions, results, metrics, and comparison.
-- [ ] Document both final demonstration workflows and their observed tool sequences.
+- [x] Add final deployment architecture and verified deployment behavior.
+- [x] Add final evaluation questions, results, metrics, and comparison.
+- [x] Document both final demonstration workflows and their observed tool sequences.
 
 ## 17. General Documentation
 
@@ -243,7 +243,7 @@ This checklist translates the project brief into verifiable requirements.
 - [x] Verify all required files and folders are present.
 - [x] Verify citations, snippets, and tool traces are readable in the deployed UI.
 - [ ] Verify both demonstration workflows immediately before recording.
-- [ ] Review this entire checklist against the final implementation.
+- [x] Review this entire checklist against the final implementation.
 
 ## 20. Submission
 

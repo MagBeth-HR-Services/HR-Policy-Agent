@@ -10,7 +10,9 @@ The application combines Retrieval-Augmented Generation (RAG), LangGraph agent o
 
 ## Project Status
 
-The application currently runs locally and includes:
+Engineering, evaluation, deployment, and required markdown files are complete. Remaining work is the 7–10 minute demonstration video and course submission. Details are in `HOW_TO_FINISH.md`.
+
+The application is live and also runs locally. It includes:
 
 - A corpus of 11 fictional HR policy documents
 - Markdown and PDF policy loading
@@ -24,7 +26,8 @@ The application currently runs locally and includes:
 - Employee-ID and confirmation safety controls
 - A FastAPI chat interface with citations, snippets, and MCP tool traces
 - Unit and smoke tests, including retrieval and MCP discovery
-- A 24-case evaluation runner with gold answers, aggregate metrics, and an ablation flag
+- **24 evaluation cases** (`EVAL-001` through `EVAL-024`). Every case has a `gold_answer`. The assignment asks for 20–30 cases; this repository has exactly 24, not a larger set
+- Aggregate evaluation metrics, warm latency p50/p95, and a no-policy-search ablation (24/24 full agent, 18/24 ablation)
 - GitHub Actions continuous integration
 - `design-and-evaluation.md`, `ai-tooling.md`, and `deployed.md` with the live URL and evaluation results
 
@@ -157,7 +160,7 @@ HR_DATABASE_PATH=./data/hr_data.db
 
 Never commit `.env` or share an API key.
 
-The verified 24-case evaluation used the paid `google/gemini-3-flash-preview` model because it provided reliable tool calling and structured evaluation output. OpenRouter usage charges apply. Another tool-capable OpenRouter model may be selected by changing `OPENROUTER_MODEL`, but results and rate limits may differ.
+The verified evaluation of all 24 gold-answer cases used the paid `google/gemini-3-flash-preview` model because it provided reliable tool calling and structured evaluation output. OpenRouter usage charges apply. Another tool-capable OpenRouter model may be selected by changing `OPENROUTER_MODEL`, but results and rate limits may differ.
 
 ### 5. Build the policy vector index
 
@@ -293,7 +296,7 @@ The repository currently contains 51 passing automated tests covering:
 
 ## Run the Evaluation
 
-Run all current evaluation cases:
+Run all 24 evaluation cases (`evaluation/cases.json`; each case includes a gold / expected answer):
 
 ```cmd
 python -m evaluation.run_evaluation
@@ -439,8 +442,9 @@ Blueprint file: `render.yaml`. Python pin: `.python-version`.
 
 - `PROJECT_SCOPE.md` — project workflows and boundaries
 - `ARCHITECTURE.md` — system architecture
-- `PROJECT_CHECKLIST.md` — assignment requirements
-- `evaluation/` — evaluation cases, runner, and results
+- `PROJECT_CHECKLIST.md` — assignment requirements (remaining items are the video and submission)
+- `HOW_TO_FINISH.md` — remaining demonstration and submission steps
+- `evaluation/` — 24 gold-answer cases, runner, and results
 - `mock_data/DATA_SCHEMA.md` — synthetic data schema
 
 The following final submission documents are in the repository:
@@ -448,7 +452,6 @@ The following final submission documents are in the repository:
 - `design-and-evaluation.md`
 - `ai-tooling.md`
 - `deployed.md`
-- `HOW_TO_FINISH.md`
 
 ## License and Data Notice
 
