@@ -4,7 +4,7 @@ AI coding tools are allowed for this assignment. This file describes how they we
 
 ## Tools used
 
-- **Cursor** (Agent) for local setup, requirement mapping against the Quantic brief, implementation of traces/citations/health, tests, evaluation-case expansion, and draft documentation.
+- **Cursor** (Agent) and Codex (Agent) for local setup, requirement mapping against the Quantic brief, implementation of traces/citations/health, tests, evaluation-case expansion, and draft documentation.
 - **OpenRouter-hosted models** at runtime for the LangGraph agent and the evaluation judge (configured through `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`).
 - **Local `sentence-transformers/all-MiniLM-L6-v2`** for embeddings. This is not a code-generation tool; it is the retrieval embedder.
 
